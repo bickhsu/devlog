@@ -45,6 +45,41 @@ The generated component is available through the package export:
 import { Button } from "@devlog/ui/components/button"
 ```
 
+Then add a block to
+`apps/design-system/src/playground/blocks.tsx`. The playground is code-driven:
+the registry order controls the visual order, while the canvas handles the
+responsive masonry layout.
+
+```tsx
+import { Button } from "@devlog/ui/components/button"
+
+{
+  id: "button",
+  title: "Button",
+  description: "Actions and primary decisions.",
+  category: "component",
+  render: () => (
+    <div className="flex flex-wrap gap-3">
+      <Button>Default</Button>
+      <Button variant="secondary">Secondary</Button>
+      <Button variant="outline">Outline</Button>
+      <Button disabled>Disabled</Button>
+    </div>
+  ),
+}
+```
+
+Each component block should demonstrate its default appearance, important
+variants, disabled state, and relevant interaction states. Playground layout,
+documentation copy, and demo-only state stay in `apps/design-system`; reusable
+component code stays in `packages/ui`.
+
+Design-system metadata is exported separately for documentation surfaces:
+
+```tsx
+import { designSystemMeta } from "@devlog/ui/meta"
+```
+
 Applications consume the package with a workspace dependency:
 
 ```json
