@@ -1,4 +1,5 @@
 import { useTheme } from "@/components/theme-provider"
+import { PlaygroundShell } from "@/components/playground-shell"
 
 const colors = [
   ["Background", "bg-background"],
@@ -15,6 +16,7 @@ export function App() {
   const nextTheme = theme === "dark" ? "light" : "dark"
 
   return (
+    <PlaygroundShell>
     <main className="min-h-svh bg-background px-6 py-12 text-foreground">
       <div className="mx-auto max-w-5xl space-y-16">
         <header className="flex items-start justify-between gap-6 border-b pb-8">
@@ -84,5 +86,6 @@ export function App() {
         </section>
       </div>
     </main>
+    </PlaygroundShell>
   )
 }
