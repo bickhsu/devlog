@@ -1,0 +1,20 @@
+<!-- @dsCard group="Colors" viewport="700x150" name="Borders & fills" subtitle="shadcn border / input / ring" -->
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  body { margin: 0; background: var(--bg-app); color: var(--text-primary); font-family: var(--font-sans); padding: 20px; display: flex; gap: 14px; flex-wrap: wrap; }
+  .box { flex: 1 1 0; min-width: 120px; height: 72px; border-radius: var(--radius); display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--text-secondary); }
+  .lbl { font-size: 10px; color: var(--muted-foreground); margin-top: 7px; text-align: center; }
+  .col { flex: 1 1 0; min-width: 120px; }
+</style>
+</head>
+<body>
+  <div class="col"><div class="box" style="border:1px solid var(--border)">--border</div><div class="lbl">0 0% 14.9%</div></div>
+  <div class="col"><div class="box" style="border:1px solid var(--input)">--input</div><div class="lbl">0 0% 14.9%</div></div>
+  <div class="col"><div class="box" style="outline: 2px solid var(--ring); outline-offset:2px">--ring</div><div class="lbl">focus ring · 0 0% 83.1%</div></div>
+  <div class="col"><div class="box" style="background:var(--accent)">--accent</div><div class="lbl">hover surface</div></div>
+</body>
+</html>

@@ -1,0 +1,31 @@
+<!-- @dsCard group="Type" viewport="700x210" name="Typefaces" subtitle="IBM Plex Mono is the voice; Inter (cv01/ss03) for dense chrome" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  body { margin: 0; background: var(--bg-app); color: var(--text-primary); padding: 22px; }
+  .block { padding: 4px 0; }
+  .eyebrow { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 8px; }
+  .mono { font-family: var(--font-mono); }
+  .sans { font-family: var(--font-sans); }
+  .big { font-size: 26px; font-weight: 600; letter-spacing: -0.02em; }
+  .sub { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+  hr { border: none; border-top: 1px solid var(--border-subtle); margin: 16px 0; }
+</style>
+</head>
+<body>
+  <div class="block">
+    <div class="eyebrow">Primary · IBM Plex Mono</div>
+    <div class="mono big">cd /metai/cad-agent → adapter</div>
+    <div class="mono sub">400 regular · 500 medium · 600 semibold · 700 bold</div>
+  </div>
+  <hr />
+  <div class="block">
+    <div class="eyebrow">Companion · Inter (cv01, ss03)</div>
+    <div class="sans big" style="font-feature-settings:'cv01','ss03';font-weight:510">Copy Context Range</div>
+    <div class="sans sub">Inter Variable · signature weight 510 · used where mono reads too wide</div>
+  </div>
+</body>
+</html>

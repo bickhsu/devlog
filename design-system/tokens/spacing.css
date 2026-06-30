@@ -1,0 +1,67 @@
+/* ============================================================
+   DevLog — Spacing, radius, shadow, motion, layout tokens
+   Tight, grid-aligned spacing. Restrained elevation: depth comes
+   from hairline borders + faint surface lifts, not heavy shadows.
+   ============================================================ */
+
+:root {
+  /* ---- Spacing (4px base unit) ---- */
+  --space-0: 0;
+  --space-1: 0.25rem;   /* 4 */
+  --space-2: 0.5rem;    /* 8 */
+  --space-3: 0.75rem;   /* 12 */
+  --space-4: 1rem;      /* 16 */
+  --space-5: 1.25rem;   /* 20 */
+  --space-6: 1.5rem;    /* 24 */
+  --space-8: 2rem;      /* 32 */
+  --space-10: 2.5rem;   /* 40 */
+  --space-12: 3rem;     /* 48 */
+  --space-16: 4rem;     /* 64 */
+
+  /* ---- Radii ---- */
+  --radius-xs: 4px;     /* chips, kbd */
+  --radius-sm: 6px;     /* inputs, small controls (source) */
+  --radius-md: 8px;     /* composer, cards (source) */
+  --radius-lg: 12px;    /* dialogs, popovers */
+  --radius-xl: 16px;    /* sidebar shell (source ≈17) */
+  --radius-pill: 999px;
+
+  /* ---- Borders ---- */
+  --bw-hairline: 1px; /* @kind other */
+  --bw-thick: 2px; /* @kind other */
+
+  /* ---- Elevation: Linear-style. Depth from luminance + rings/insets,
+     not dark drop shadows. White hairline rings carry structure. ---- */
+  --shadow-xs: 0 1.2px 0 rgba(0,0,0,0.03);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.30), inset 0 0 0 1px rgba(255,255,255,0.04);
+  --shadow-md: 0 2px 4px rgba(0,0,0,0.40);
+  --shadow-lg: 0 16px 48px rgba(0,0,0,0.55), inset 0 0 0 1px rgba(255,255,255,0.06);
+  /* multi-layer Dialog stack (popovers, command palette, picker) */
+  --shadow-popover: 0 0 0 1px rgba(255,255,255,0.06), 0 8px 2px rgba(0,0,0,0.0), 0 5px 2px rgba(0,0,0,0.03), 0 3px 2px rgba(0,0,0,0.06), 0 1px 1px rgba(0,0,0,0.10), 0 12px 32px rgba(0,0,0,0.45);
+  --shadow-focus: 0 0 0 3px var(--focus-ring);
+  --inset-line: inset 0 0 0 1px var(--border);
+  --inset-sunken: inset 0 0 12px 0 rgba(0,0,0,0.20);   /* recessed panels */
+
+  /* ---- Motion ---- */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1); /* @kind other */
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1); /* @kind other */
+  --ease-spring: cubic-bezier(0.34, 1.28, 0.7, 1); /* @kind other */
+  --dur-instant: 80ms; /* @kind other */
+  --dur-fast: 130ms; /* @kind other */
+  --dur-base: 200ms; /* @kind other */
+  --dur-slow: 320ms; /* @kind other */
+
+  /* ---- Layout ---- */
+  --sidebar-w: 288px; /* @kind other */
+  --content-max: 1100px; /* @kind other */
+  --topbar-h: 48px; /* @kind other */
+  --composer-max: 1100px; /* @kind other */
+
+  /* ---- Z-index ---- */
+  --z-base: 0; /* @kind other */
+  --z-sticky: 10; /* @kind other */
+  --z-popover: 100; /* @kind other */
+  --z-overlay: 200; /* @kind other */
+  --z-dialog: 210; /* @kind other */
+  --z-toast: 300; /* @kind other */
+}

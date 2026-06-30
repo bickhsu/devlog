@@ -1,0 +1,8 @@
+/* DevLog Design System — global entry point.
+   Consumers link THIS file. It only @imports; no rules live here.
+   Order: fonts → tokens (colors, type, spacing). */
+
+@import url('./tokens/fonts.css');
+@import url('./tokens/colors.css');
+@import url('./tokens/typography.css');
+@import url('./tokens/spacing.css');

@@ -1,0 +1,153 @@
+/* ============================================================
+   DevLog — Color tokens (shadcn default system)
+
+   CONVENTION: Each shadcn token exists in two forms:
+     --background-hsl: 0 0% 100%       ← HSL channels (composable)
+     --background:     hsl(0 0% 100%)  ← resolved color (use anywhere)
+   Components reference the resolved form: var(--background), var(--border), etc.
+   Override the *-hsl vars to retheme — both forms update automatically.
+   ============================================================ */
+
+/* ---- Light (shadcn default) ---- */
+:root {
+  --background-hsl:          0 0% 100%; /* @kind color */
+  --foreground-hsl:          0 0% 3.9%; /* @kind color */
+  --card-hsl:                0 0% 100%; /* @kind color */
+  --card-foreground-hsl:     0 0% 3.9%; /* @kind color */
+  --popover-hsl:             0 0% 100%; /* @kind color */
+  --popover-foreground-hsl:  0 0% 3.9%; /* @kind color */
+  --primary-hsl:             0 0% 9%; /* @kind color */
+  --primary-foreground-hsl:  0 0% 98%; /* @kind color */
+  --secondary-hsl:           0 0% 96.1%; /* @kind color */
+  --secondary-foreground-hsl:0 0% 9%; /* @kind color */
+  --muted-hsl:               0 0% 96.1%; /* @kind color */
+  --muted-foreground-hsl:    0 0% 45.1%; /* @kind color */
+  --accent-hsl:              0 0% 96.1%; /* @kind color */
+  --accent-foreground-hsl:   0 0% 9%; /* @kind color */
+  --destructive-hsl:         0 84.2% 60.2%; /* @kind color */
+  --destructive-foreground-hsl: 0 0% 98%; /* @kind color */
+  --border-hsl:              0 0% 89.8%; /* @kind color */
+  --input-hsl:               0 0% 89.8%; /* @kind color */
+  --ring-hsl:                0 0% 3.9%; /* @kind color */
+
+  --radius: 0.5rem;
+
+  /* Resolved colors — use these in CSS (components, inline styles, cards) */
+  --background:           hsl(var(--background-hsl));
+  --foreground:           hsl(var(--foreground-hsl));
+  --card:                 hsl(var(--card-hsl));
+  --card-foreground:      hsl(var(--card-foreground-hsl));
+  --popover:              hsl(var(--popover-hsl));
+  --popover-foreground:   hsl(var(--popover-foreground-hsl));
+  --primary:              hsl(var(--primary-hsl));
+  --primary-foreground:   hsl(var(--primary-foreground-hsl));
+  --secondary:            hsl(var(--secondary-hsl));
+  --secondary-foreground: hsl(var(--secondary-foreground-hsl));
+  --muted:                hsl(var(--muted-hsl));
+  --muted-foreground:     hsl(var(--muted-foreground-hsl));
+  --accent:               hsl(var(--accent-hsl));
+  --accent-foreground:    hsl(var(--accent-foreground-hsl));
+  --destructive:          hsl(var(--destructive-hsl));
+  --destructive-foreground: hsl(var(--destructive-foreground-hsl));
+  --border:               hsl(var(--border-hsl));
+  --input:                hsl(var(--input-hsl));
+  --ring:                 hsl(var(--ring-hsl));
+}
+
+/* ---- Dark ---- */
+:root[data-theme="dark"], .dark {
+  --background-hsl:          0 0% 3.9%; /* @kind color */
+  --foreground-hsl:          0 0% 98%; /* @kind color */
+  --card-hsl:                0 0% 3.9%; /* @kind color */
+  --card-foreground-hsl:     0 0% 98%; /* @kind color */
+  --popover-hsl:             0 0% 3.9%; /* @kind color */
+  --popover-foreground-hsl:  0 0% 98%; /* @kind color */
+  --primary-hsl:             0 0% 98%; /* @kind color */
+  --primary-foreground-hsl:  0 0% 9%; /* @kind color */
+  --secondary-hsl:           0 0% 14.9%; /* @kind color */
+  --secondary-foreground-hsl:0 0% 98%; /* @kind color */
+  --muted-hsl:               0 0% 14.9%; /* @kind color */
+  --muted-foreground-hsl:    0 0% 63.9%; /* @kind color */
+  --accent-hsl:              0 0% 14.9%; /* @kind color */
+  --accent-foreground-hsl:   0 0% 98%; /* @kind color */
+  --destructive-hsl:         0 62.8% 30.6%; /* @kind color */
+  --destructive-foreground-hsl: 0 0% 98%; /* @kind color */
+  --border-hsl:              0 0% 14.9%; /* @kind color */
+  --input-hsl:               0 0% 14.9%; /* @kind color */
+  --ring-hsl:                0 0% 83.1%; /* @kind color */
+}
+
+/* ============================================================
+   DevLog semantic aliases
+   Map component tokens onto shadcn resolved vars.
+   These are the names components use internally.
+   ============================================================ */
+:root {
+  /* Surfaces */
+  --bg-app:          var(--background);
+  --bg-subtle:       var(--background);
+  --surface:         var(--card);
+  --surface-raised:  var(--card);
+  --surface-hover:   var(--accent);
+  --surface-active:  var(--secondary);
+  --surface-overlay: var(--popover);
+
+  /* Borders */
+  --border-subtle:   var(--border);
+  --border-strong:   var(--ring);
+  --line:            var(--border);
+  --line-faint:      var(--border);
+  --line-strong:     var(--ring);
+
+  /* Text */
+  --text-primary:    var(--foreground);
+  --text-secondary:  var(--muted-foreground);
+  --text-muted:      var(--muted-foreground);
+  --text-faint:      var(--muted-foreground);
+  --text-placeholder:var(--muted-foreground);
+  --text-on-accent:  var(--primary-foreground);
+
+  /* Interactive accent → shadcn primary */
+  --accent-strong:   var(--primary);
+  --accent-hover:    var(--primary);
+  --accent-bg:       var(--accent);
+  --focus-ring:      hsl(var(--ring-hsl) / 0.4);
+
+  /* Misc */
+  --path:          var(--foreground);
+  --selection-bg:  var(--accent);
+  --success:       hsl(142 76% 36%);
+  --warning:       hsl(38  92% 50%);
+  --danger:        var(--destructive);
+
+  /* Legacy ink / gray ramp (kept so older card labels still resolve) */
+  --ink-900: var(--background);
+  --ink-850: var(--background);
+  --ink-800: var(--card);
+  --ink-750: var(--card);
+  --ink-700: var(--accent);
+  --ink-650: var(--secondary);
+  --ink-600: var(--border);
+  --gray-100: var(--foreground);
+  --gray-300: var(--muted-foreground);
+  --gray-400: var(--muted-foreground);
+  --gray-500: var(--muted-foreground);
+  --gray-600: var(--muted-foreground);
+  --blue-300: var(--primary);
+  --blue-400: var(--primary);
+  --blue-500: var(--primary);
+  --blue-glow: hsl(var(--ring-hsl) / 0.3);
+  --blue-bg:   var(--accent);
+  --green-bg:  hsl(142 76% 36% / 0.15);
+  --amber-bg:  hsl(38  92% 50% / 0.15);
+  --red-bg:    hsl(var(--destructive-hsl) / 0.15);
+  --violet-400: var(--primary);
+  --violet-bg:  var(--accent);
+  --cyan-400:  var(--muted-foreground);
+
+  /* Scrollbar */
+  --scroll-thumb:       var(--border);
+  --scroll-thumb-hover: var(--muted-foreground);
+}
+
+::selection { background: var(--accent); }
