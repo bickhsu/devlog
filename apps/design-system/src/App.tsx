@@ -1,5 +1,6 @@
 import { designSystemMeta } from "@devlog/ui/meta"
 import {
+  type RemixiconComponentType,
   RiAddLine,
   RiArrowDownSLine,
   RiArrowLeftLine,
@@ -12,6 +13,11 @@ import {
   RiHexagonLine,
   RiLoader4Line,
   RiMoreLine,
+  RiFontSansSerif,
+  RiHeading,
+  RiPaletteLine,
+  RiRemixiconLine,
+  RiRoundedCorner,
   RiSearchLine,
   RiShareLine,
   RiShoppingBagLine,
@@ -19,14 +25,14 @@ import {
 } from "@remixicon/react"
 
 const styles = [
-  { label: "Style", value: designSystemMeta.style, mark: "⌁" },
+  { label: "Style", value: designSystemMeta.style, icon: RiPaletteLine },
   { label: "Base Color", value: designSystemMeta.baseColor, dot: "bg-zinc-400" },
   { label: "Theme", value: designSystemMeta.theme, dot: "bg-primary" },
   { label: "Chart Color", value: designSystemMeta.chartColor, dot: "bg-zinc-400" },
-  { label: "Heading", value: designSystemMeta.headingFont, mark: "Aa" },
-  { label: "Font", value: designSystemMeta.bodyFont, mark: "Aa" },
-  { label: "Icon Library", value: designSystemMeta.iconLibrary, mark: "◉" },
-  { label: "Radius", value: designSystemMeta.radius, mark: "⌝" },
+  { label: "Heading", value: designSystemMeta.headingFont, icon: RiHeading },
+  { label: "Font", value: designSystemMeta.bodyFont, icon: RiFontSansSerif },
+  { label: "Icon Library", value: designSystemMeta.iconLibrary, icon: RiRemixiconLine },
+  { label: "Radius", value: designSystemMeta.radius, icon: RiRoundedCorner },
 ] as const
 
 const colors = [
@@ -192,13 +198,13 @@ export function App() {
 
 function StyleItem({
   dot,
+  icon: Icon,
   label,
-  mark,
   value,
 }: {
   dot?: string
+  icon?: RemixiconComponentType
   label: string
-  mark?: string
   value: string
 }) {
   return (
@@ -210,7 +216,7 @@ function StyleItem({
       {dot ? (
         <span className={`size-5 rounded-full border ${dot}`} />
       ) : (
-        <span className="font-heading text-base text-muted-foreground">{mark}</span>
+        Icon ? <Icon aria-hidden className="text-muted-foreground" size={20} /> : null
       )}
     </div>
   )
