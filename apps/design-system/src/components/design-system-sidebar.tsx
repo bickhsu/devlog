@@ -1,11 +1,15 @@
+import { Button } from "@devlog/ui/components/button"
 import {
   type RemixiconComponentType,
   RiFontSansSerif,
   RiHeading,
+  RiMoonLine,
   RiPaletteLine,
   RiRemixiconLine,
   RiRoundedCorner,
+  RiSunLine,
 } from "@remixicon/react"
+import { useState } from "react"
 
 import { designSystemMeta } from "@/config/design-system"
 
@@ -39,14 +43,32 @@ const styleSections = [
 ] as const
 
 export function DesignSystemSidebar() {
+  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"))
+
+  function toggleTheme() {
+    const nextTheme = isDark ? "light" : "dark"
+
+    document.documentElement.classList.toggle("dark", nextTheme === "dark")
+    localStorage.setItem("devlog-theme", nextTheme)
+    setIsDark(nextTheme === "dark")
+  }
+
   return (
     <aside className="flex min-h-0 flex-col overflow-hidden rounded-[28px] border bg-card">
       <div className="border-b p-3">
         <div className="flex h-14 items-center justify-between rounded-2xl border bg-background px-4">
           <span className="text-sm font-medium">DevLog DesignSystem</span>
-          <span aria-hidden className="font-heading text-xl text-muted-foreground">
-            =
-          </span>
+          <Button
+            aria-label={`Switch to ${isDark ? "light" : "dark"} mode`}
+            aria-pressed={isDark}
+            className="text-muted-foreground"
+            onClick={toggleTheme}
+            size="icon"
+            title={`Switch to ${isDark ? "light" : "dark"} mode`}
+            variant="ghost"
+          >
+            {isDark ? <RiSunLine /> : <RiMoonLine />}
+          </Button>
         </div>
       </div>
 
