@@ -1,4 +1,22 @@
 import { designSystemMeta } from "@devlog/ui/meta"
+import {
+  RiAddLine,
+  RiArrowDownSLine,
+  RiArrowLeftLine,
+  RiArrowRightLine,
+  RiArrowRightSLine,
+  RiCheckLine,
+  RiDeleteBinLine,
+  RiErrorWarningLine,
+  RiFileCopyLine,
+  RiHexagonLine,
+  RiLoader4Line,
+  RiMoreLine,
+  RiSearchLine,
+  RiShareLine,
+  RiShoppingBagLine,
+  RiSubtractLine,
+} from "@remixicon/react"
 
 const styles = [
   { label: "Style", value: designSystemMeta.style, mark: "⌁" },
@@ -51,6 +69,25 @@ const typeStyles = [
     sample: "pnpm ui:add button",
     className: "font-heading text-[13px] leading-5",
   },
+] as const
+
+const icons = [
+  RiFileCopyLine,
+  RiErrorWarningLine,
+  RiDeleteBinLine,
+  RiShareLine,
+  RiShoppingBagLine,
+  RiMoreLine,
+  RiLoader4Line,
+  RiAddLine,
+  RiSubtractLine,
+  RiArrowLeftLine,
+  RiArrowRightLine,
+  RiCheckLine,
+  RiArrowDownSLine,
+  RiArrowRightSLine,
+  RiSearchLine,
+  RiHexagonLine,
 ] as const
 
 export function App() {
@@ -124,6 +161,23 @@ export function App() {
                       </p>
                     </div>
                     <p className={`mt-3 ${style.className}`}>{style.sample}</p>
+                  </div>
+                ))}
+              </div>
+            </article>
+
+            <article className="w-[580px] shrink-0 rounded-[28px] border bg-card p-6">
+              <h2 className="font-heading text-2xl font-medium">Icons</h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Remix Icon line symbols used across DevLog interfaces.
+              </p>
+              <div className="mt-8 grid grid-cols-8 gap-3">
+                {icons.map((Icon, index) => (
+                  <div
+                    className="grid aspect-square place-items-center rounded-xl border bg-background text-foreground"
+                    key={index}
+                  >
+                    <Icon aria-hidden size={22} />
                   </div>
                 ))}
               </div>
