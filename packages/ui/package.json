@@ -34,6 +34,7 @@
   },
   "exports": {
     "./globals.css": "./src/styles/globals.css",
+    "./assets/devlog-logo.svg": "./src/assets/devlog-logo.svg",
     "./lib/*": "./src/lib/*.ts",
     "./components/*": "./src/components/*.tsx",
     "./hooks/*": "./src/hooks/*.ts"
