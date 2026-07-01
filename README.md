@@ -74,11 +74,8 @@ variants, disabled state, and relevant interaction states. Playground layout,
 documentation copy, and demo-only state stay in `apps/design-system`; reusable
 component code stays in `packages/ui`.
 
-Design-system metadata is exported separately for documentation surfaces:
-
-```tsx
-import { designSystemMeta } from "@devlog/ui/meta"
-```
+Design-system metadata and other playground-only configuration stay in
+`apps/design-system`.
 
 Applications consume the package with a workspace dependency:
 
