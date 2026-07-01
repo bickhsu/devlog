@@ -1,4 +1,5 @@
 import { Button } from "@devlog/ui/components/button"
+import devlogLogo from "@devlog/ui/assets/devlog-logo.svg"
 import {
   type RemixiconComponentType,
   RiFontSansSerif,
@@ -57,7 +58,15 @@ export function DesignSystemSidebar() {
     <aside className="flex min-h-0 flex-col overflow-hidden rounded-[28px] border bg-card">
       <div className="border-b p-3">
         <div className="flex h-14 items-center justify-between rounded-2xl border bg-background px-4">
-          <span className="text-sm font-medium">DevLog DesignSystem</span>
+          <span className="flex min-w-0 items-center gap-2 text-sm font-medium">
+            <img
+              alt=""
+              aria-hidden
+              className="size-7 shrink-0 dark:invert"
+              src={devlogLogo}
+            />
+            <span className="truncate">DevLog DesignSystem</span>
+          </span>
           <Button
             aria-label={`Switch to ${isDark ? "light" : "dark"} mode`}
             aria-pressed={isDark}
