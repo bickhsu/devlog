@@ -43,7 +43,7 @@ export function DesignSystemSidebar() {
     <aside className="flex min-h-0 flex-col overflow-hidden rounded-[28px] border bg-card">
       <div className="border-b p-3">
         <div className="flex h-14 items-center justify-between rounded-2xl border bg-background px-4">
-          <span className="text-sm font-medium">Component Playground</span>
+          <span className="text-sm font-medium">DevLog DesignSystem</span>
           <span aria-hidden className="font-heading text-xl text-muted-foreground">
             =
           </span>

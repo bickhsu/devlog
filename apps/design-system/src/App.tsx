@@ -1,3 +1,4 @@
+import { Buttons } from "@/components/buttons"
 import { ColorTokens } from "@/components/color-tokens"
 import { DesignSystemSidebar } from "@/components/design-system-sidebar"
 import { Iconography } from "@/components/iconography"
@@ -14,6 +15,7 @@ export function App() {
             <ColorTokens />
             <Typography />
           </div>
+          <Buttons />
           <Iconography />
         </div>
       </section>
