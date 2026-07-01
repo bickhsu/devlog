@@ -174,18 +174,18 @@ export function App() {
             </article>
           </div>
 
-          <article className="w-[580px] shrink-0 rounded-[28px] border bg-card p-6">
+          <article className="w-[430px] shrink-0 rounded-[28px] border bg-card p-6">
               <h2 className="font-heading text-2xl font-medium">Icons</h2>
               <p className="mt-2 text-sm text-muted-foreground">
                 Remix Icon line symbols used across DevLog interfaces.
               </p>
-              <div className="mt-8 grid grid-cols-8 gap-3">
+              <div className="mt-8 grid grid-cols-8 gap-2">
                 {icons.map((Icon, index) => (
                   <div
                     className="grid aspect-square place-items-center rounded-xl border bg-background text-foreground"
                     key={index}
                   >
-                    <Icon aria-hidden size={22} />
+                    <Icon aria-hidden size={20} />
                   </div>
                 ))}
               </div>
