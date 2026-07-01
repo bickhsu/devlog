@@ -129,7 +129,8 @@ export function App() {
 
       <section className="min-w-0 overflow-x-auto overflow-y-hidden rounded-[28px] border bg-background">
         <div className="flex min-h-full w-max items-start gap-6 p-6">
-            <article className="w-[430px] shrink-0 rounded-[28px] border bg-card p-6">
+          <div className="w-[430px] shrink-0 space-y-6">
+            <article className="rounded-[28px] border bg-card p-6">
               <h1 className="font-heading text-2xl font-medium">Color Tokens</h1>
               <p className="mt-2 text-sm text-muted-foreground">
                 Semantic colors shared by every DevLog interface.
@@ -146,7 +147,7 @@ export function App() {
               </div>
             </article>
 
-            <article className="w-[430px] shrink-0 rounded-[28px] border bg-card p-6">
+            <article className="rounded-[28px] border bg-card p-6">
               <h2 className="font-heading text-2xl font-medium">Typography</h2>
               <p className="mt-2 text-sm text-muted-foreground">
                 Geist Mono for headings. Geist for interface copy.
@@ -165,8 +166,9 @@ export function App() {
                 ))}
               </div>
             </article>
+          </div>
 
-            <article className="w-[580px] shrink-0 rounded-[28px] border bg-card p-6">
+          <article className="w-[580px] shrink-0 rounded-[28px] border bg-card p-6">
               <h2 className="font-heading text-2xl font-medium">Icons</h2>
               <p className="mt-2 text-sm text-muted-foreground">
                 Remix Icon line symbols used across DevLog interfaces.
@@ -181,7 +183,7 @@ export function App() {
                   </div>
                 ))}
               </div>
-            </article>
+          </article>
         </div>
       </section>
     </main>
