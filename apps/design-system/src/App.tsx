@@ -26,9 +26,36 @@ const colors = [
   ["chart-5", "bg-chart-5"],
 ] as const
 
+const typeStyles = [
+  {
+    role: "Heading",
+    meta: "Geist Mono · 30 / 36 · 500",
+    sample: "Designing with rhythm and hierarchy.",
+    className: "font-heading text-[30px] font-medium leading-9",
+  },
+  {
+    role: "Body",
+    meta: "Geist · 16 / 24 · 400",
+    sample: "Readable interface copy for longer content.",
+    className: "text-base leading-6",
+  },
+  {
+    role: "Label",
+    meta: "Geist · 14 / 20 · 500",
+    sample: "Context",
+    className: "text-sm font-medium leading-5",
+  },
+  {
+    role: "Code",
+    meta: "Geist Mono · 13 / 20 · 400",
+    sample: "pnpm ui:add button",
+    className: "font-heading text-[13px] leading-5",
+  },
+] as const
+
 export function App() {
   return (
-    <main className="grid h-svh grid-cols-[288px_minmax(0,1fr)] gap-6 overflow-hidden bg-black p-3 text-foreground">
+    <main className="grid h-svh grid-cols-[288px_minmax(0,1fr)] gap-3 overflow-hidden bg-black p-3 text-foreground">
       <aside className="flex min-h-0 flex-col overflow-hidden rounded-[28px] border bg-card">
         <div className="border-b p-3">
           <div className="flex h-14 items-center justify-between rounded-2xl border bg-background px-4">
@@ -63,15 +90,12 @@ export function App() {
         </div>
       </aside>
 
-      <section className="min-w-0 overflow-auto rounded-[28px] border bg-background">
-        <div className="min-h-full min-w-[560px] px-16 py-14">
-          <div className="w-[430px] space-y-16">
-            <article className="rounded-[28px] border bg-card p-6">
-              <h1 className="font-heading text-2xl font-medium">
-                {designSystemMeta.style} - {designSystemMeta.headingFont}
-              </h1>
-              <p className="mt-2 truncate text-sm text-muted-foreground">
-                The foundation shared by every DevLog interface.
+      <section className="min-w-0 overflow-x-auto overflow-y-hidden rounded-[28px] border bg-background">
+        <div className="flex min-h-full w-max items-start gap-6 p-6">
+            <article className="w-[430px] shrink-0 rounded-[28px] border bg-card p-6">
+              <h1 className="font-heading text-2xl font-medium">Color Tokens</h1>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Semantic colors shared by every DevLog interface.
               </p>
               <div className="mt-8 grid grid-cols-6 gap-x-3 gap-y-6">
                 {colors.map(([name, className]) => (
@@ -85,23 +109,25 @@ export function App() {
               </div>
             </article>
 
-            <article className="rounded-[28px] border bg-card p-6">
-              <p className="font-heading text-xs uppercase text-muted-foreground">
-                Geist Mono - Geist
+            <article className="w-[430px] shrink-0 rounded-[28px] border bg-card p-6">
+              <h2 className="font-heading text-2xl font-medium">Typography</h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Geist Mono for headings. Geist for interface copy.
               </p>
-              <h2 className="mt-4 font-heading text-3xl leading-tight">
-                Designing with rhythm and hierarchy.
-              </h2>
-              <p className="mt-5 text-base leading-7 text-muted-foreground">
-                A strong body style keeps long-form content readable and balances
-                the visual weight of headings.
-              </p>
-              <p className="mt-4 text-base leading-7 text-muted-foreground">
-                Thoughtful spacing and cadence help paragraphs scan quickly
-                without feeling dense.
-              </p>
+              <div className="mt-8 divide-y border-y">
+                {typeStyles.map((style) => (
+                  <div className="py-5" key={style.role}>
+                    <div className="flex items-center justify-between gap-4">
+                      <p className="text-xs font-medium">{style.role}</p>
+                      <p className="font-heading text-[10px] text-muted-foreground">
+                        {style.meta}
+                      </p>
+                    </div>
+                    <p className={`mt-3 ${style.className}`}>{style.sample}</p>
+                  </div>
+                ))}
+              </div>
             </article>
-          </div>
         </div>
       </section>
     </main>
