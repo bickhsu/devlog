@@ -14,6 +14,9 @@ import { useState } from "react"
 
 import { designSystemMeta } from "@/config/design-system"
 
+const defaultThemeColor = "#a3e635"
+const themeColorStorageKey = "devlog-theme-color"
+
 const styleSections = [
   {
     id: "style",
@@ -87,14 +90,63 @@ export function DesignSystemSidebar() {
             className={`space-y-3 p-3 ${index < styleSections.length - 1 ? "border-b" : ""}`}
             key={section.id}
           >
-            {section.items.map((item) => (
-              <StyleItem {...item} key={item.label} />
-            ))}
+            {section.items.map((item) =>
+              item.label === "Theme" ? (
+                <ThemeColorItem key={item.label} />
+              ) : (
+                <StyleItem {...item} key={item.label} />
+              )
+            )}
           </div>
         ))}
       </div>
     </aside>
   )
+}
+
+function ThemeColorItem() {
+  const [color, setColor] = useState(
+    () => localStorage.getItem(themeColorStorageKey) ?? defaultThemeColor
+  )
+
+  function updateThemeColor(nextColor: string) {
+    const foreground = getContrastColor(nextColor)
+    const root = document.documentElement
+
+    root.style.setProperty("--primary", nextColor)
+    root.style.setProperty("--primary-foreground", foreground)
+    root.style.setProperty("--ring", nextColor)
+    root.style.setProperty("--sidebar-primary", nextColor)
+    root.style.setProperty("--sidebar-primary-foreground", foreground)
+    localStorage.setItem(themeColorStorageKey, nextColor)
+    localStorage.setItem(`${themeColorStorageKey}-foreground`, foreground)
+    setColor(nextColor)
+  }
+
+  return (
+    <div className="flex min-h-20 items-center justify-between rounded-2xl border bg-background px-4 py-3">
+      <div>
+        <p className="text-xs text-muted-foreground">Theme</p>
+        <p className="mt-1 font-heading text-sm font-medium uppercase">{color}</p>
+      </div>
+      <input
+        aria-label="Choose theme color"
+        className="size-7 cursor-pointer overflow-hidden rounded-full border bg-transparent p-0 [&::-moz-color-swatch]:border-0 [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-full [&::-webkit-color-swatch]:border-0"
+        onChange={(event) => updateThemeColor(event.target.value)}
+        type="color"
+        value={color}
+      />
+    </div>
+  )
+}
+
+function getContrastColor(hexColor: string) {
+  const red = Number.parseInt(hexColor.slice(1, 3), 16)
+  const green = Number.parseInt(hexColor.slice(3, 5), 16)
+  const blue = Number.parseInt(hexColor.slice(5, 7), 16)
+  const luminance = (red * 299 + green * 587 + blue * 114) / 1000
+
+  return luminance > 150 ? "#18181b" : "#ffffff"
 }
 
 function StyleItem({

@@ -10,6 +10,19 @@
         "dark",
         localStorage.getItem("devlog-theme") !== "light"
       )
+
+      const themeColor = localStorage.getItem("devlog-theme-color")
+      if (themeColor) {
+        const foreground =
+          localStorage.getItem("devlog-theme-color-foreground") ?? "#18181b"
+        const root = document.documentElement
+
+        root.style.setProperty("--primary", themeColor)
+        root.style.setProperty("--primary-foreground", foreground)
+        root.style.setProperty("--ring", themeColor)
+        root.style.setProperty("--sidebar-primary", themeColor)
+        root.style.setProperty("--sidebar-primary-foreground", foreground)
+      }
     </script>
   </head>
   <body>
