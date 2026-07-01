@@ -13,14 +13,15 @@
 
       const themeColor = localStorage.getItem("devlog-theme-color")
       if (themeColor) {
+        const cssColor = localStorage.getItem("devlog-theme-color-css") ?? themeColor
         const foreground =
           localStorage.getItem("devlog-theme-color-foreground") ?? "#18181b"
         const root = document.documentElement
 
-        root.style.setProperty("--primary", themeColor)
+        root.style.setProperty("--primary", cssColor)
         root.style.setProperty("--primary-foreground", foreground)
-        root.style.setProperty("--ring", themeColor)
-        root.style.setProperty("--sidebar-primary", themeColor)
+        root.style.setProperty("--ring", cssColor)
+        root.style.setProperty("--sidebar-primary", cssColor)
         root.style.setProperty("--sidebar-primary-foreground", foreground)
       }
     </script>
