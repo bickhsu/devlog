@@ -27,12 +27,12 @@ const typeStyles = [
 
 export function Typography() {
   return (
-    <article className="rounded-[28px] border bg-card p-6">
+    <article className="flex max-h-full min-h-0 w-[430px] shrink-0 flex-col overflow-hidden rounded-[28px] border bg-card p-6">
       <h2 className="font-heading text-2xl font-medium">Typography</h2>
       <p className="mt-2 text-sm text-muted-foreground">
         Geist Mono for headings. Geist for interface copy.
       </p>
-      <div className="mt-8 divide-y border-y">
+      <div className="mt-8 min-h-0 flex-1 divide-y overflow-y-auto border-y pr-1">
         {typeStyles.map((style) => (
           <div className="py-5" key={style.role}>
             <div className="flex items-center justify-between gap-4">

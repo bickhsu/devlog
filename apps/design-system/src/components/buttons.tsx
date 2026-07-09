@@ -21,62 +21,64 @@ const sizes: Exclude<ButtonSize, "icon">[] = ["sm", "default", "lg"]
 
 export function Buttons() {
   return (
-    <article className="w-[430px] shrink-0 rounded-[28px] border bg-card p-6">
+    <article className="flex max-h-full min-h-0 w-[430px] shrink-0 flex-col overflow-hidden rounded-[28px] border bg-card p-6">
       <h2 className="font-heading text-2xl font-medium">Button</h2>
       <p className="mt-2 text-sm text-muted-foreground">
         Actions with clear hierarchy, sizing, and feedback states.
       </p>
 
-      <Showcase title="Variants">
-        {variants.map((variant) => (
-          <Button key={variant} variant={variant}>
-            {toLabel(variant)}
+      <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+        <Showcase title="Variants">
+          {variants.map((variant) => (
+            <Button key={variant} variant={variant}>
+              {toLabel(variant)}
+            </Button>
+          ))}
+        </Showcase>
+
+        <Showcase title="Sizes">
+          {sizes.map((size) => (
+            <Button key={size} size={size} variant="outline">
+              {toLabel(size)}
+            </Button>
+          ))}
+          <Button aria-label="Settings" size="icon" variant="outline">
+            <RiSettings3Line />
           </Button>
-        ))}
-      </Showcase>
+        </Showcase>
 
-      <Showcase title="Sizes">
-        {sizes.map((size) => (
-          <Button key={size} size={size} variant="outline">
-            {toLabel(size)}
+        <Showcase title="Composition">
+          <Button>
+            <RiAddLine />
+            New entry
           </Button>
-        ))}
-        <Button aria-label="Settings" size="icon" variant="outline">
-          <RiSettings3Line />
-        </Button>
-      </Showcase>
+          <Button variant="secondary">
+            Continue
+            <RiArrowRightLine />
+          </Button>
+          <Button aria-label="Delete" size="icon" variant="destructive">
+            <RiDeleteBinLine />
+          </Button>
+        </Showcase>
 
-      <Showcase title="Composition">
-        <Button>
-          <RiAddLine />
-          New entry
-        </Button>
-        <Button variant="secondary">
-          Continue
-          <RiArrowRightLine />
-        </Button>
-        <Button aria-label="Delete" size="icon" variant="destructive">
-          <RiDeleteBinLine />
-        </Button>
-      </Showcase>
+        <Showcase title="Shortcuts">
+          <div className="flex w-full items-center gap-2">
+            <Shortcut label="Slash">/</Shortcut>
+            <Shortcut label="Tab">Tab</Shortcut>
+            <Shortcut label="Command">
+              <RiCommandLine />
+            </Shortcut>
+            <Shortcut label="Return">
+              <RiCornerDownLeftLine />
+            </Shortcut>
+          </div>
+        </Showcase>
 
-      <Showcase title="Shortcuts">
-        <div className="flex w-full items-center gap-2">
-          <Shortcut label="Slash">/</Shortcut>
-          <Shortcut label="Tab">Tab</Shortcut>
-          <Shortcut label="Command">
-            <RiCommandLine />
-          </Shortcut>
-          <Shortcut label="Return">
-            <RiCornerDownLeftLine />
-          </Shortcut>
-        </div>
-      </Showcase>
-
-      <Showcase title="States">
-        <Button disabled>Disabled</Button>
-        <Button loading>Loading</Button>
-      </Showcase>
+        <Showcase title="States">
+          <Button disabled>Disabled</Button>
+          <Button loading>Loading</Button>
+        </Showcase>
+      </div>
     </article>
   )
 }
