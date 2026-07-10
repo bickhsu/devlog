@@ -1,83 +1,48 @@
 # DevLog
 
-DevLog is a pnpm workspace. The design system is isolated from applications and
-acts as their component ground truth.
+DevLog 是一個 pnpm workspace，用來建立與檢視共用 UI foundations 和 components。
 
 ```text
 apps/
-  design-system/  # Foundation and component preview
+  design-system/  # Design System preview
 packages/
-  ui/             # Shared theme, utilities, and components
+  ui/             # 共用 theme、utilities 和 components
 ```
 
-The future Tauri application belongs in `apps/devlog`, with its React frontend
-and `src-tauri` directory colocated inside that app.
+## 開發
 
-## Development
-
-Install dependencies and start the design-system preview:
+安裝 dependencies 並啟動 Design System：
 
 ```bash
 pnpm install
 pnpm dev
 ```
 
-Run all workspace checks:
+執行 workspace 驗證：
 
 ```bash
-pnpm typecheck
 pnpm lint
+pnpm typecheck
 pnpm build
 ```
 
-## Adding UI components
+## 新增共用 Component
 
-`packages/ui` is the only source of shared UI components. Add shadcn components
-from the repository root:
+共用 component 一律放在 `packages/ui`。從 repo 根目錄使用 shadcn 新增 component：
 
 ```bash
 pnpm ui:add button
 ```
 
-The generated component is available through the package export:
+新增後，透過 package export 使用：
 
 ```tsx
 import { Button } from "@devlog/ui/components/button"
 ```
 
-Then add a block to
-`apps/design-system/src/playground/blocks.tsx`. The playground is code-driven:
-the registry order controls the visual order, while the canvas handles the
-responsive masonry layout.
+在 `apps/design-system/src/components` 新增或更新展示內容，確認 component 的 default appearance、重要 variants 和必要 states。預覽與 demo-only state 留在 `apps/design-system`；可重用的 component code 留在 `packages/ui`。
 
-```tsx
-import { Button } from "@devlog/ui/components/button"
-
-{
-  id: "button",
-  title: "Button",
-  description: "Actions and primary decisions.",
-  category: "component",
-  render: () => (
-    <div className="flex flex-wrap gap-3">
-      <Button>Default</Button>
-      <Button variant="secondary">Secondary</Button>
-      <Button variant="outline">Outline</Button>
-      <Button disabled>Disabled</Button>
-    </div>
-  ),
-}
-```
-
-Each component block should demonstrate its default appearance, important
-variants, disabled state, and relevant interaction states. Playground layout,
-documentation copy, and demo-only state stay in `apps/design-system`; reusable
-component code stays in `packages/ui`.
-
-Design-system metadata and other playground-only configuration stay in
-`apps/design-system`.
-
-Applications consume the package with a workspace dependency:
+應用程式以 workspace dependency 使用共用 package：
 
 ```json
 {
@@ -87,6 +52,4 @@ Applications consume the package with a workspace dependency:
 }
 ```
 
-Keep application behavior, Tauri APIs, and product-specific state outside
-`packages/ui`. Add a new shared package only after it has multiple consumers and
-a stable public interface.
+不要在 `packages/ui` 放產品邏輯、Tauri API 或 product-specific state。只有在有多個 consumer 且介面穩定時，才新增新的 shared package。
