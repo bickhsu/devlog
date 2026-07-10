@@ -1,6 +1,8 @@
 # DevLog
 
-DevLog 是一個 pnpm workspace，用來建立與檢視共用 UI foundations 和 components。
+DevLog 是一個用來快速紀錄日常開發碎片的工具。
+
+這個 repo 採用 pnpm workspace，包含共用 UI foundations、components 與 Design System preview。
 
 ```text
 apps/

@@ -2,8 +2,6 @@ import { Button, type ButtonSize, type ButtonVariant } from "@devlog/ui/componen
 import {
   RiAddLine,
   RiArrowRightLine,
-  RiCommandLine,
-  RiCornerDownLeftLine,
   RiDeleteBinLine,
   RiSettings3Line,
 } from "@remixicon/react"
@@ -61,36 +59,12 @@ export function Buttons() {
           </Button>
         </Showcase>
 
-        <Showcase title="Shortcuts">
-          <div className="flex w-full items-center gap-2">
-            <Shortcut label="Slash">/</Shortcut>
-            <Shortcut label="Tab">Tab</Shortcut>
-            <Shortcut label="Command">
-              <RiCommandLine />
-            </Shortcut>
-            <Shortcut label="Return">
-              <RiCornerDownLeftLine />
-            </Shortcut>
-          </div>
-        </Showcase>
-
         <Showcase title="States">
           <Button disabled>Disabled</Button>
           <Button loading>Loading</Button>
         </Showcase>
       </div>
     </article>
-  )
-}
-
-function Shortcut({ children, label }: { children: React.ReactNode; label: string }) {
-  return (
-    <kbd
-      aria-label={label}
-      className="inline-flex h-9 min-w-11 items-center justify-center rounded-lg border bg-background px-3 font-heading text-sm text-muted-foreground [&_svg]:size-4"
-    >
-      {children}
-    </kbd>
   )
 }
 
