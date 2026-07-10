@@ -49,7 +49,6 @@ export function DesignSystemSidebar() {
     const nextTheme = isDark ? "light" : "dark"
 
     document.documentElement.classList.toggle("dark", nextTheme === "dark")
-    localStorage.setItem("devlog-theme", nextTheme)
     setIsDark(nextTheme === "dark")
   }
 

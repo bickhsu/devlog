@@ -4,6 +4,8 @@ DevLog 是一個用來快速紀錄日常開發碎片的工具。
 
 這個 repo 採用 pnpm workspace，包含共用 UI foundations、components 與 Design System preview。
 
+Design System preview 目前只支援 desktop，用來檢查共用 UI foundations 與 components，不是產品 UI。
+
 ```text
 apps/
   design-system/  # Design System preview
