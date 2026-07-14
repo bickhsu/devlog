@@ -20,7 +20,7 @@ const typeStyles = [
   {
     role: "Code",
     meta: "Geist Mono · 13 / 20 · 400",
-    sample: "pnpm ui:add button",
+    sample: "bun run ui:add button",
     className: "font-heading text-[13px] leading-5",
   },
 ] as const
