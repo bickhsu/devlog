@@ -1,0 +1,38 @@
+{
+  "name": "@devlog/desktop",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "tauri dev",
+    "dev:web": "vite",
+    "build": "tauri build",
+    "build:web": "tsc -b && vite build",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "preview": "vite preview",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@devlog/ui": "workspace:*",
+    "@tauri-apps/api": "^2",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10",
+    "@tailwindcss/vite": "^4",
+    "@tauri-apps/cli": "^2",
+    "@types/node": "^24",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^6",
+    "eslint": "^10",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "globals": "^17",
+    "typescript": "~6",
+    "typescript-eslint": "^8",
+    "vite": "^8"
+  }
+}
