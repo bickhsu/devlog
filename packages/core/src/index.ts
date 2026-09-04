@@ -7,3 +7,4 @@ export type {
 } from './domain/models'
 export { DomainError, DomainErrorCode } from './domain/errors'
 export { normalizeEntryContent } from './domain/content'
+export { normalizeContextName } from './domain/context-name'
