@@ -5,3 +5,4 @@ export type {
   Context,
   Entry,
 } from './domain/models'
+export { DomainError, DomainErrorCode } from './domain/errors'
