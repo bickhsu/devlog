@@ -40,6 +40,9 @@ jobs:
       - name: Typecheck workspace
         run: bun run typecheck
 
+      - name: Test core
+        run: bun run --filter @devlog/core test
+
   desktop:
     name: Desktop
     runs-on: macos-15
