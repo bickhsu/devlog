@@ -1,5 +1,6 @@
 import { useState } from "react"
 
+import { EntryItemPreview } from "@/components/entry-item-preview"
 import { MessageInputPreview } from "@/components/message-input-preview"
 import { EmptyStatePreview } from "@/components/empty-state-preview"
 import { Buttons } from "@/components/buttons"
@@ -25,6 +26,7 @@ export function App() {
       <section className="min-h-0 min-w-0 overflow-x-auto overflow-y-hidden rounded-[28px] border bg-background">
         <div className="flex h-full w-max flex-col flex-wrap content-start items-start gap-6 p-6">
           <MessageInputPreview />
+          <EntryItemPreview />
           <EmptyStatePreview />
           <ColorTokens />
           <Typography />
