@@ -26,10 +26,7 @@ export function MessageInputPreview() {
   }
 
   return (
-    <PreviewCard
-      title="Message Input"
-      description="Capture a thought, a small update, or something to revisit."
-    >
+    <PreviewCard title="Message Input" description="Write and send a message.">
       <div className="space-y-5">
         <MessageInput
           value={value}
@@ -52,7 +49,7 @@ export function MessageInputPreview() {
           {submitting
             ? "Sending…"
             : lastMessage
-              ? "Last message sent in this preview:"
+              ? "Last sent message:"
               : "Messages in this preview are not saved."}
           {lastMessage && (
             <p className="whitespace-pre-wrap rounded-xl bg-muted/30 p-3 text-foreground wrap-anywhere">

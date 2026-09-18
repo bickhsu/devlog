@@ -10,7 +10,7 @@ export function EmptyStatePreview() {
   return (
     <PreviewCard
       title="Empty State"
-      description="Helpful starting points for daily timelines and context views."
+      description="Empty views with optional actions."
     >
       <section className="space-y-3 pb-2">
         <EmptyState
@@ -29,13 +29,7 @@ export function EmptyStatePreview() {
             title="Capture your first thought"
             description="Start with a small note about what you are working on."
             action={
-              <Button
-                onClick={() =>
-                  setNotice(
-                    "New entry clicked. This preview does not create a real entry."
-                  )
-                }
-              >
+              <Button onClick={() => setNotice("New entry clicked.")}>
                 New entry
               </Button>
             }
@@ -50,22 +44,12 @@ export function EmptyStatePreview() {
             description="Add a note here or browse your existing entries."
             action={
               <>
-                <Button
-                  onClick={() =>
-                    setNotice(
-                      "Add entry clicked. This preview does not create a real entry."
-                    )
-                  }
-                >
+                <Button onClick={() => setNotice("Add entry clicked.")}>
                   Add entry
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() =>
-                    setNotice(
-                      "View all entries clicked. Navigation is not connected in this preview."
-                    )
-                  }
+                  onClick={() => setNotice("View all entries clicked.")}
                 >
                   View all entries
                 </Button>
