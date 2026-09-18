@@ -1,5 +1,6 @@
 import { useState } from "react"
 
+import { EmptyStatePreview } from "@/components/empty-state-preview"
 import { Buttons } from "@/components/buttons"
 import { ColorTokens } from "@/components/color-tokens"
 import { DesignSystemSidebar } from "@/components/design-system-sidebar"
@@ -22,6 +23,7 @@ export function App() {
 
       <section className="min-h-0 min-w-0 overflow-x-auto overflow-y-hidden rounded-[28px] border bg-background">
         <div className="flex h-full w-max flex-col flex-wrap content-start items-start gap-6 p-6">
+          <EmptyStatePreview />
           <ColorTokens />
           <Typography />
           <Buttons />
