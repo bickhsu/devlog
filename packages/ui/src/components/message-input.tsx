@@ -1,4 +1,4 @@
-import { useId, useLayoutEffect, useRef } from "react"
+import { type KeyboardEventHandler, useId, useLayoutEffect, useRef } from "react"
 import { RiArrowUpLine } from "@remixicon/react"
 
 import { Button } from "@devlog/ui/components/button"
@@ -13,6 +13,8 @@ export interface MessageInputProps {
   disabled?: boolean
   submitting?: boolean
   error?: string
+  onKeyDown?: KeyboardEventHandler<HTMLTextAreaElement>
+  hideSend?: boolean
   className?: string
 }
 
@@ -30,6 +32,8 @@ export function MessageInput({
   disabled = false,
   submitting = false,
   error,
+  onKeyDown,
+  hideSend = false,
   className,
 }: MessageInputProps) {
   const id = useId()
@@ -62,7 +66,7 @@ export function MessageInput({
       className={cn("min-w-0", className)}
       onSubmit={(event) => {
         event.preventDefault()
-        if (!unavailable && !composing.current && value.trim()) {
+        if (!hideSend && !unavailable && !composing.current && value.trim()) {
           textareaRef.current?.focus()
           onSubmit()
         }
@@ -84,6 +88,9 @@ export function MessageInput({
             composing.current = false
           }}
           onKeyDown={(event) => {
+            if (composing.current || event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229) return
+            onKeyDown?.(event)
+            if (event.defaultPrevented) return
             if (
               event.key !== "Enter" ||
               event.shiftKey ||
@@ -110,7 +117,7 @@ export function MessageInput({
           rows={1}
           className="block max-h-64 min-h-9 min-w-0 flex-1 resize-none overflow-y-auto rounded-lg bg-transparent px-2 py-1.5 text-sm leading-6 text-foreground outline-none placeholder:text-muted-foreground/70 disabled:cursor-not-allowed disabled:opacity-50"
         />
-        {(value.trim().length > 0 || submitting) && (
+        {(!hideSend && (value.trim().length > 0 || submitting)) && (
           <div className="flex shrink-0 items-center">
             <Button
               type="submit"
