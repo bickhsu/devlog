@@ -89,9 +89,9 @@ export function ContextMessageInput({
       <MessageInput
         {...props}
         value={value}
-        disabled={disabled || creating}
+        disabled={disabled}
         error={createError || props.error}
-        submitting={submitting}
+        submitting={submitting || creating}
         hideSend={isPath}
         onValueChange={(next) => {
           setPendingPath(null)

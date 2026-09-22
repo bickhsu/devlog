@@ -55,6 +55,18 @@ export function ContextPicker({ id, anchorRef, options, activeIndex, onSelect, c
     }
   }, [anchorRef])
 
+  useLayoutEffect(() => {
+    const menu = menuRef.current
+    const active = menu?.querySelector<HTMLElement>('[aria-selected="true"]')
+    if (!menu || !active) return
+    const viewport = menu.getBoundingClientRect()
+    const item = active.getBoundingClientRect()
+    const top = viewport.top + menu.clientTop
+    const bottom = top + menu.clientHeight
+    if (item.top < top) menu.scrollTop += item.top - top
+    else if (item.bottom > bottom) menu.scrollTop += item.bottom - bottom
+  }, [activeIndex, options, createPath])
+
   return createPortal(
     <div
       ref={menuRef}
