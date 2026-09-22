@@ -83,7 +83,7 @@ export function ContextMessageInput({
 
   return (
     <div ref={anchorRef} className="relative min-w-0 space-y-2" data-slot="context-message-input">
-      <div className="px-2">
+      <div className="px-px">
         <ContextBadge path={selectedContext?.path ?? "/"} />
       </div>
       <MessageInput
