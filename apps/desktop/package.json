@@ -9,9 +9,12 @@
     "build": "tauri build",
     "build:web": "tsc -b && vite build",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc -b",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "lint:rust": "cargo fmt --manifest-path src-tauri/Cargo.toml -- --check && cargo clippy --locked --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings",
+    "typecheck:rust": "cargo check --locked --manifest-path src-tauri/Cargo.toml --all-targets",
+    "test": "cargo test --locked --manifest-path src-tauri/Cargo.toml --all-targets"
   },
   "dependencies": {
     "@devlog/ui": "workspace:*",

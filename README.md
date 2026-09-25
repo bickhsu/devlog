@@ -8,8 +8,10 @@ Design System preview 目前只支援 desktop，用來檢查共用 UI foundation
 
 ```text
 apps/
+  desktop/        # Tauri desktop application
   design-system/  # Design System preview
 packages/
+  core/           # 共用 domain models 與 validation
   ui/             # 共用 theme、utilities 和 components
 ```
 
@@ -36,13 +38,35 @@ bun install
 bun run dev
 ```
 
-執行 workspace 驗證：
+乾淨安裝並執行完整 workspace 驗證：
 
 ```bash
-bun run lint
-bun run typecheck
-bun run build
+bun ci
+bun run validate
 ```
+
+完整驗證目前以 macOS 為基準，需要 Xcode Command Line Tools、Rust（透過 rustup 使用 repo 的 `rust-toolchain.toml`）與 Git LFS。首次 checkout 後執行 `git lfs pull`，確保 Desktop icons 等資產不是 LFS pointer。其他平台執行 Desktop native checks／build 前，需先安裝對應的 Tauri 系統依賴。
+
+`validate` 依序執行以下檢查，任一步失敗即停止：
+
+| 指令 | 範圍 |
+| --- | --- |
+| `bun run lint` | 所有 workspace 的 TypeScript／React ESLint |
+| `bun run typecheck` | 所有 workspace 的 TypeScript，包含 app 與 Vite config |
+| `bun run lint:rust` | Desktop Rust formatting 與 Clippy（warnings 視為錯誤） |
+| `bun run typecheck:rust` | Desktop Rust 所有 targets 的 Cargo check |
+| `bun run test` | Core Bun tests 與 Desktop Rust tests |
+| `bun run build` | Design System frontend、Desktop native application 與 Core source validation |
+
+Core 直接 export TypeScript source，因此 `build` 使用 `tsc --noEmit` 驗證，不產生 bundle。UI 同樣直接提供 source，由使用它的 app build；UI 與 Design System 目前沒有獨立 test script，root runner 會略過未定義的 scripts。Desktop 的 `test` 執行 Rust test targets，目前尚無產品測試案例；不代表已有 UI 或端對端測試覆蓋。
+
+只驗證 Desktop frontend、不編譯 native application 時：
+
+```bash
+bun run --filter @devlog/desktop build:web
+```
+
+CI 在 Linux 執行 TypeScript lint、typecheck 與 Core tests，並在 macOS 乾淨安裝後執行同一個 `bun run validate` 完整流程。
 
 Root scripts 會操作對應的 workspaces。需要直接執行特定 workspace script 時，使用 package name 過濾：
 

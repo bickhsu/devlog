@@ -60,14 +60,8 @@ jobs:
       - name: Install dependencies
         run: bun ci
 
-      - name: Verify Rust formatting
-        run: cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml -- --check
+      - name: Verify Git LFS objects
+        run: git lfs fsck
 
-      - name: Run Clippy
-        run: cargo clippy --locked --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings
-
-      - name: Run Rust tests
-        run: cargo test --locked --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets
-
-      - name: Build workspace
-        run: bun run build
+      - name: Validate workspace
+        run: bun run validate
