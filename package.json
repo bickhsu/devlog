@@ -11,6 +11,10 @@
     "build": "bun run --workspaces --if-present build",
     "lint": "bun run --workspaces --if-present lint",
     "typecheck": "bun run --workspaces --if-present typecheck",
-    "ui:add": "bunx --bun shadcn@latest add -c packages/ui"
+    "ui:add": "bunx --bun shadcn@latest add -c packages/ui",
+    "test": "bun run --workspaces --if-present test",
+    "lint:rust": "bun run --filter @devlog/desktop lint:rust",
+    "typecheck:rust": "bun run --filter @devlog/desktop typecheck:rust",
+    "validate": "bun run lint && bun run typecheck && bun run lint:rust && bun run typecheck:rust && bun run test && bun run build"
   }
 }
