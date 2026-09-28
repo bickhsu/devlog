@@ -13,6 +13,7 @@
     "windows": [
       {
         "label": "main",
+        "create": false,
         "title": "DevLog",
         "width": 960,
         "height": 720,
