@@ -1,6 +1,6 @@
 import { useContext } from "react"
 
-import { DesktopDependenciesContext } from "@/application/dependencies-context"
+import { DesktopDependenciesContext } from "@/application/desktop-composition"
 
 /** Read the dependencies installed by the desktop composition root. */
 export function useDesktopDependencies() {
