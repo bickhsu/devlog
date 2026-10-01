@@ -17,6 +17,7 @@
     "test": "cargo test --locked --manifest-path src-tauri/Cargo.toml --all-targets"
   },
   "dependencies": {
+    "@devlog/core": "workspace:*",
     "@devlog/ui": "workspace:*",
     "@tauri-apps/api": "^2",
     "react": "^19.2.6",

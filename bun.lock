@@ -34,6 +34,7 @@
       "name": "@devlog/desktop",
       "version": "0.1.0",
       "dependencies": {
+        "@devlog/core": "workspace:*",
         "@devlog/ui": "workspace:*",
         "@tauri-apps/api": "^2",
         "react": "^19.2.6",
