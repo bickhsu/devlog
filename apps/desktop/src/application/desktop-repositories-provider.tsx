@@ -6,8 +6,8 @@ import type {
   EntryRepository,
 } from "@devlog/core"
 
-/** Services available to desktop features. Composition owns their lifetime. */
-export type DesktopDependencies = {
+/** Repositories available to desktop features. */
+export type DesktopRepositories = {
   readonly appState: AppStateRepository
   readonly contexts: ContextRepository
   readonly entries: EntryRepository
@@ -15,19 +15,19 @@ export type DesktopDependencies = {
 
 // This Context belongs with the dependency type and its composition provider.
 // eslint-disable-next-line react-refresh/only-export-components
-export const DesktopDependenciesContext =
-  createContext<DesktopDependencies | null>(null)
+export const DesktopRepositoriesContext =
+  createContext<DesktopRepositories | null>(null)
 
-export function DesktopComposition({
-  dependencies,
+export function DesktopRepositoriesProvider({
+  repositories,
   children,
 }: {
-  readonly dependencies: DesktopDependencies
+  readonly repositories: DesktopRepositories
   readonly children: ReactNode
 }) {
   return (
-    <DesktopDependenciesContext.Provider value={dependencies}>
+    <DesktopRepositoriesContext.Provider value={repositories}>
       {children}
-    </DesktopDependenciesContext.Provider>
+    </DesktopRepositoriesContext.Provider>
   )
 }
