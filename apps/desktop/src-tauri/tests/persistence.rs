@@ -365,3 +365,25 @@ fn error_codes_match_core_domain_error_codes() {
 
     assert_eq!(native_codes, core_codes);
 }
+
+#[test]
+fn concurrent_first_launches_both_migrate_successfully() {
+    let data_dir = TestDataDir::new();
+    let path = data_dir.dir.path().to_owned();
+    let barrier = std::sync::Arc::new(std::sync::Barrier::new(4));
+
+    let launches: Vec<_> = (0..4)
+        .map(|_| {
+            let path = path.clone();
+            let barrier = barrier.clone();
+            std::thread::spawn(move || {
+                barrier.wait();
+                Database::open_in_dir(&path).map(|database| database.schema_version())
+            })
+        })
+        .collect();
+
+    for launch in launches {
+        assert_eq!(launch.join().unwrap().unwrap(), 1);
+    }
+}

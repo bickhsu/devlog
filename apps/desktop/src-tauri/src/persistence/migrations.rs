@@ -1,4 +1,4 @@
-use rusqlite::Connection;
+use rusqlite::{Connection, TransactionBehavior};
 
 use super::error::PersistenceError;
 
@@ -35,28 +35,48 @@ pub fn migrate(
         .all(|(index, migration)| migration.version as usize == index + 1));
 
     let latest = latest_version(migrations);
-    let current = schema_version(connection)?;
 
-    if current > latest {
-        return Err(PersistenceError::UnsupportedSchemaVersion {
-            found: current,
-            latest,
-        });
+    for migration in migrations {
+        apply(connection, migration, latest)?;
     }
 
-    for migration in migrations.iter().filter(|m| m.version > current) {
-        apply(connection, migration).map_err(|source| PersistenceError::Migration {
-            version: migration.version,
-            source,
-        })?;
-    }
-
+    // Also refuses a newer database when there is nothing left to apply.
+    ensure_supported(schema_version(connection)?, latest)?;
     Ok(latest)
 }
 
-fn apply(connection: &mut Connection, migration: &Migration) -> rusqlite::Result<()> {
-    let transaction = connection.transaction()?;
-    transaction.execute_batch(migration.sql)?;
-    transaction.pragma_update(None, "user_version", migration.version)?;
-    transaction.commit()
+/// Takes the write lock before reading the version, so a second app instance
+/// starting at the same time waits and then skips steps the first applied.
+fn apply(
+    connection: &mut Connection,
+    migration: &Migration,
+    latest: u32,
+) -> Result<(), PersistenceError> {
+    let failed = |source| PersistenceError::Migration {
+        version: migration.version,
+        source,
+    };
+
+    let transaction = connection
+        .transaction_with_behavior(TransactionBehavior::Immediate)
+        .map_err(failed)?;
+    let current = schema_version(&transaction)?;
+    ensure_supported(current, latest)?;
+
+    if current >= migration.version {
+        return Ok(());
+    }
+
+    transaction.execute_batch(migration.sql).map_err(failed)?;
+    transaction
+        .pragma_update(None, "user_version", migration.version)
+        .map_err(failed)?;
+    transaction.commit().map_err(failed)
+}
+
+fn ensure_supported(found: u32, latest: u32) -> Result<(), PersistenceError> {
+    if found > latest {
+        return Err(PersistenceError::UnsupportedSchemaVersion { found, latest });
+    }
+    Ok(())
 }

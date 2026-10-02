@@ -11,10 +11,11 @@ pub fn run() {
         .invoke_handler(commands::handler())
         .setup(|app| {
             initialize_database(app)?;
-            // Windows are declared with `create: false` so none exists until
-            // the schema is complete; a migration failure aborts startup here.
-            for window in app.config().app.windows.clone() {
-                WebviewWindowBuilder::from_config(app.handle(), &window)?.build()?;
+            // Product windows are declared with `create: false` so none exists
+            // until the schema is complete; a migration failure aborts startup
+            // here. Tauri has already built any `create: true` windows.
+            for window in app.config().app.windows.iter().filter(|w| !w.create) {
+                WebviewWindowBuilder::from_config(app.handle(), window)?.build()?;
             }
             Ok(())
         })
