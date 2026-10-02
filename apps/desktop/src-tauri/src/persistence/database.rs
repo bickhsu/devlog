@@ -1,6 +1,6 @@
 use std::path::Path;
 use std::sync::{Mutex, PoisonError};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use rusqlite::Connection;
 
@@ -71,8 +71,7 @@ fn configure(connection: &Connection) -> Result<(), PersistenceError> {
     connection.busy_timeout(BUSY_TIMEOUT)?;
     // Must be set outside a transaction and per connection.
     connection.pragma_update(None, "foreign_keys", true)?;
-    let journal_mode: String =
-        connection.pragma_update_and_check(None, "journal_mode", "wal", |row| row.get(0))?;
+    let journal_mode = enable_wal(connection)?;
 
     if !journal_mode.eq_ignore_ascii_case("wal") {
         return Err(PersistenceError::Configuration(format!(
@@ -81,4 +80,22 @@ fn configure(connection: &Connection) -> Result<(), PersistenceError> {
     }
 
     Ok(())
+}
+
+/// Switching a fresh database to WAL needs an exclusive lock, and SQLite
+/// reports SQLITE_BUSY at once (without the busy handler) when another
+/// instance is opening the same file, so retry within BUSY_TIMEOUT.
+fn enable_wal(connection: &Connection) -> Result<String, PersistenceError> {
+    let started = Instant::now();
+    loop {
+        match connection.pragma_update_and_check(None, "journal_mode", "wal", |row| row.get(0)) {
+            Err(rusqlite::Error::SqliteFailure(error, _))
+                if error.code == rusqlite::ErrorCode::DatabaseBusy
+                    && started.elapsed() < BUSY_TIMEOUT =>
+            {
+                std::thread::sleep(Duration::from_millis(10));
+            }
+            result => return Ok(result?),
+        }
+    }
 }
