@@ -250,7 +250,7 @@ fn find_in(connection: &Connection, id: &str) -> rusqlite::Result<Option<Context
 }
 
 /// Any UUID version is accepted so ids from a future sync source still work.
-fn is_canonical_uuid(id: &str) -> bool {
+pub(super) fn is_canonical_uuid(id: &str) -> bool {
     Uuid::try_parse(id).is_ok_and(|uuid| uuid.hyphenated().to_string() == id)
 }
 

@@ -5,6 +5,7 @@ pub mod capture;
 mod clock;
 pub mod contexts;
 mod database;
+pub mod entries;
 mod error;
 pub mod migrations;
 

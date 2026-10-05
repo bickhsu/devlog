@@ -3,84 +3,11 @@
 
 mod common;
 
-use std::sync::{Arc, Mutex};
-
-use common::TestDataDir;
-use devlog_desktop_lib::commands;
+use common::ipc::Harness;
 use devlog_desktop_lib::events::{
     APP_STATE_CHANGED, CAPTURE_DRAFT_CHANGED, CONTEXTS_CHANGED, ENTRIES_CHANGED,
 };
 use serde_json::{json, Value};
-use tauri::ipc::{CallbackFn, InvokeBody};
-use tauri::test::{get_ipc_response, mock_builder, mock_context, noop_assets, MockRuntime};
-use tauri::webview::InvokeRequest;
-use tauri::{App, Listener, WebviewWindow, WebviewWindowBuilder};
-
-const EVENTS: [&str; 4] = [
-    ENTRIES_CHANGED,
-    CONTEXTS_CHANGED,
-    CAPTURE_DRAFT_CHANGED,
-    APP_STATE_CHANGED,
-];
-
-struct Harness {
-    // Held so the app, and with it the listeners, outlive each test body.
-    _app: App<MockRuntime>,
-    _data_dir: TestDataDir,
-    webview: WebviewWindow<MockRuntime>,
-    received: Arc<Mutex<Vec<(String, Value)>>>,
-}
-
-impl Harness {
-    fn new() -> Self {
-        let data_dir = TestDataDir::new();
-        let app = mock_builder()
-            .manage(data_dir.open())
-            .invoke_handler(commands::handler())
-            .build(mock_context(noop_assets()))
-            .expect("build mock app");
-        let webview = WebviewWindowBuilder::new(&app, "main", Default::default())
-            .build()
-            .expect("build mock window");
-
-        let received = Arc::new(Mutex::new(Vec::new()));
-        for name in EVENTS {
-            let received = Arc::clone(&received);
-            app.listen_any(name, move |event| {
-                let payload = serde_json::from_str(event.payload()).expect("JSON payload");
-                received.lock().unwrap().push((name.to_owned(), payload));
-            });
-        }
-
-        Self {
-            _app: app,
-            _data_dir: data_dir,
-            webview,
-            received,
-        }
-    }
-
-    fn invoke(&self, cmd: &str, body: Value) -> Result<Value, Value> {
-        get_ipc_response(
-            &self.webview,
-            InvokeRequest {
-                cmd: cmd.into(),
-                callback: CallbackFn(0),
-                error: CallbackFn(1),
-                url: "tauri://localhost".parse().unwrap(),
-                body: InvokeBody::Json(body),
-                headers: Default::default(),
-                invoke_key: tauri::test::INVOKE_KEY.to_string(),
-            },
-        )
-        .map(|response| response.deserialize::<Value>().unwrap())
-    }
-
-    /// Events received since the last call, in emit order.
-    fn take(&self) -> Vec<(String, Value)> {
-        std::mem::take(&mut *self.received.lock().unwrap())
-    }
-}
 
 fn event(name: &str, payload: Value) -> (String, Value) {
     (name.to_owned(), payload)

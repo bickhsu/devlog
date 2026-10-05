@@ -3,6 +3,7 @@
 
 pub mod capture;
 pub mod contexts;
+pub mod entries;
 mod error;
 mod status;
 
@@ -25,5 +26,9 @@ pub fn handler<R: tauri::Runtime>() -> impl Fn(tauri::ipc::Invoke<R>) -> bool + 
         capture::save_capture_draft,
         capture::discard_capture_draft,
         capture::submit_capture_entry,
+        entries::get_entry,
+        entries::update_entry,
+        entries::list_entries_between,
+        entries::list_entries_by_context,
     ]
 }
