@@ -1,36 +1,12 @@
+mod common;
+
 use std::path::PathBuf;
 
+use common::TestDataDir;
 use devlog_desktop_lib::commands::{database_status, CommandError, ErrorCode};
 use devlog_desktop_lib::persistence::migrations::{Migration, MIGRATIONS};
-use devlog_desktop_lib::persistence::{Database, PersistenceError, DATABASE_FILE_NAME};
+use devlog_desktop_lib::persistence::{Database, PersistenceError};
 use rusqlite::{params, Connection};
-use tempfile::TempDir;
-
-/// Each test gets its own throwaway application-data directory.
-struct TestDataDir {
-    dir: TempDir,
-}
-
-impl TestDataDir {
-    fn new() -> Self {
-        Self {
-            dir: TempDir::new().expect("create temp dir"),
-        }
-    }
-
-    fn database_path(&self) -> PathBuf {
-        self.dir.path().join(DATABASE_FILE_NAME)
-    }
-
-    fn open(&self) -> Database {
-        Database::open_in_dir(self.dir.path()).expect("open database")
-    }
-
-    /// Bypasses `Database` to inspect what actually landed on disk.
-    fn raw_connection(&self) -> Connection {
-        Connection::open(self.database_path()).expect("open raw connection")
-    }
-}
 
 fn user_version(connection: &Connection) -> u32 {
     connection
@@ -183,9 +159,14 @@ fn active_sibling_context_names_are_unique_ignoring_ascii_case() {
             // Same name under a different parent is fine.
             insert_context(connection, "child", Some("root-a"), "Work")?;
 
-            // Archiving frees the name for a new active sibling.
-            connection.execute("UPDATE contexts SET deleted_at = 1 WHERE id = 'root-a'", [])?;
+            // Archiving or deleting frees the name for a new active sibling.
+            connection.execute(
+                "UPDATE contexts SET archived_at = 1 WHERE id = 'root-a'",
+                [],
+            )?;
             insert_context(connection, "root-c", None, "work")?;
+            connection.execute("UPDATE contexts SET deleted_at = 1 WHERE id = 'root-c'", [])?;
+            insert_context(connection, "root-d", None, "Work")?;
             Ok(())
         })
         .unwrap();
@@ -297,7 +278,7 @@ fn database_from_newer_build_is_refused() {
         .unwrap();
 
     assert!(matches!(
-        Database::open_in_dir(data_dir.dir.path()),
+        Database::open_in_dir(data_dir.path()),
         Err(PersistenceError::UnsupportedSchemaVersion {
             found: 99,
             latest: 1
@@ -369,7 +350,7 @@ fn error_codes_match_core_domain_error_codes() {
 #[test]
 fn concurrent_first_launches_both_migrate_successfully() {
     let data_dir = TestDataDir::new();
-    let path = data_dir.dir.path().to_owned();
+    let path = data_dir.path().to_owned();
     let barrier = std::sync::Arc::new(std::sync::Barrier::new(4));
 
     let launches: Vec<_> = (0..4)

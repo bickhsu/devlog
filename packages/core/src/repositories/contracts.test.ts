@@ -184,7 +184,7 @@ class InMemoryEntryRepository implements EntryRepository {
     if (input.contextId !== null) {
       const context = this.contexts.get(input.contextId)
       if (!context) throw new DomainError(DomainErrorCode.ContextNotFound)
-      if (context.deletedAt !== null && entry.contextId !== input.contextId) {
+      if (context.archivedAt !== null && entry.contextId !== input.contextId) {
         throw new DomainError(DomainErrorCode.ContextArchived)
       }
     }
@@ -204,7 +204,7 @@ function entry(id: string, time: number, contextId: string | null = null): Entry
 function context(id: string, parentId: string | null, archived = false): Context {
   return {
     id, name: id, parentId, createdAt: new Date(0), updatedAt: new Date(0),
-    deletedAt: archived ? new Date(1) : null,
+    archivedAt: archived ? new Date(1) : null, deletedAt: null,
   }
 }
 
