@@ -1,24 +1,24 @@
 import type { AppState, CaptureDraft, Context, Entry } from "@devlog/core"
 
-/** Tauri serializes Rust timestamps as RFC 3339 strings across the IPC boundary. */
+/** Rust commands send timestamps as Unix epoch milliseconds, the storage format. */
 export type EntryDto = Omit<Entry, "createdAt" | "updatedAt" | "deletedAt"> & {
-  readonly createdAt: string
-  readonly updatedAt: string
-  readonly deletedAt: string | null
+  readonly createdAt: number
+  readonly updatedAt: number
+  readonly deletedAt: number | null
 }
 
 export type ContextDto = Omit<Context, "createdAt" | "updatedAt" | "deletedAt"> & {
-  readonly createdAt: string
-  readonly updatedAt: string
-  readonly deletedAt: string | null
+  readonly createdAt: number
+  readonly updatedAt: number
+  readonly deletedAt: number | null
 }
 
 export type CaptureDraftDto = Omit<CaptureDraft, "updatedAt"> & {
-  readonly updatedAt: string
+  readonly updatedAt: number
 }
 
 export type AppStateDto = Omit<AppState, "updatedAt"> & {
-  readonly updatedAt: string
+  readonly updatedAt: number
 }
 
 export function entryFromDto(dto: EntryDto): Entry {
