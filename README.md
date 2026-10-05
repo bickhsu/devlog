@@ -58,7 +58,7 @@ bun run validate
 | `bun run test` | Core Bun tests 與 Desktop Rust tests |
 | `bun run build` | Design System frontend、Desktop native application 與 Core source validation |
 
-Core 直接 export TypeScript source，因此 `build` 使用 `tsc --noEmit` 驗證，不產生 bundle。UI 同樣直接提供 source，由使用它的 app build；UI 與 Design System 目前沒有獨立 test script，root runner 會略過未定義的 scripts。Desktop 的 `test` 執行 Rust test targets，目前涵蓋 SQLite migration、schema constraints、command error transport 與 context commands（使用暫存 database）；不代表已有 UI 或端對端測試覆蓋。
+Core 直接 export TypeScript source，因此 `build` 使用 `tsc --noEmit` 驗證，不產生 bundle。UI 同樣直接提供 source，由使用它的 app build；UI 與 Design System 目前沒有獨立 test script，root runner 會略過未定義的 scripts。Desktop 的 `test` 執行 Rust test targets，目前涵蓋 SQLite migration、schema constraints、command error transport、context commands，以及 capture drafts 與 entry submission 的 transaction 行為（使用暫存 database）；不代表已有 UI 或端對端測試覆蓋。
 
 只驗證 Desktop frontend、不編譯 native application 時：
 

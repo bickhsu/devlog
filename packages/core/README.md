@@ -31,6 +31,18 @@ Repository 負責配置 ID 與時間；domain 日期使用 `Date`，序列化由
 
 Desktop adapter 須依 surface 序列化 draft mutations。Submit 前取消尚未執行的 debounce、等待已開始的 save 完成，再提交；成功後不得讓 late save 重建 draft。不同 repository 方法的普通呼叫組合無法保證 submit 與 archive 所需的跨資料原子性，adapter 必須使用底層 transaction。
 
+## Capture Session
+
+`createCaptureSession({ repository, surface })` 是一個 composer 的草稿生命週期，main 與 quick-capture 各建一個：
+
+- `load()`：恢復該 surface 的 draft；沒有 draft 時回傳空白內容與預設 context。
+- `change(state)`：記錄編輯，debounce 後自動保存（預設 500ms）。
+- `flush()`：立即保存尚未送出的編輯，並等待先前的寫入完成；window hide／close 時呼叫。
+- `discard()`：取消待保存的編輯並刪除 draft。
+- `submit(state)`：先以 `normalizeEntryContent` 驗證，失敗時不碰儲存也保留待保存的編輯；通過後取消待執行的 autosave、排在已開始的 save 之後提交。
+
+Session 內所有 repository 呼叫依呼叫順序執行，因此成功 submit 後不會有 late autosave 重建已清除的 draft；submit 開始後的新編輯則成為下一份 draft。Autosave 沒有呼叫端可 reject，失敗透過 `onAutosaveError` 回報，並在下一次 `flush()` 重試。`createKeyedSerialQueue` 是同一套依 key 序列化的工具，adapter 用它依 surface 排序 IPC。
+
 ## Fake 使用範例
 
 `src/repositories/contracts.test.ts` 示範 consumer 從公開入口匯入介面，注入 in-memory fake，驗證查詢邊界、狀態變更與錯誤。這些測試驗證介面使用方式；實際 adapter 仍需自己的 transaction、concurrency、constraints 與 error translation 整合測試。
