@@ -218,11 +218,19 @@ pub fn archive(database: &Database, id: &str) -> Result<(), ContextError> {
 /// Mirrors Core's `normalizeContextName` so the write boundary does not
 /// depend on the caller having normalized.
 fn normalize_name(name: &str) -> Result<&str, ContextError> {
-    let name = name.trim();
+    let name = name.trim_matches(is_js_whitespace);
     if name.is_empty() || name.contains('/') {
         return Err(ContextError::NameInvalid);
     }
     Ok(name)
+}
+
+/// The set JavaScript's `String.prototype.trim` removes. Rust's Unicode
+/// `White_Space` differs by two characters: it also includes U+0085 (NEL)
+/// and lacks U+FEFF (BOM), so `str::trim` alone would accept or store names
+/// that Core rejects or keeps.
+fn is_js_whitespace(c: char) -> bool {
+    c == '\u{FEFF}' || (c.is_whitespace() && c != '\u{85}')
 }
 
 /// Every id from the webview (find, parent, rename, archive) is looked up

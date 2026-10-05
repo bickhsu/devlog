@@ -435,3 +435,16 @@ fn ids_of_any_uuid_version_are_accepted() {
         "Imported"
     );
 }
+
+#[test]
+fn names_trim_the_same_whitespace_as_core() {
+    let database = TestDataDir::new().open();
+
+    // JavaScript trim removes BOM but keeps NEL; Rust's str::trim does the opposite.
+    assert!(matches!(
+        contexts::create(&database, None, "\u{FEFF} \u{3000}"),
+        Err(ContextError::NameInvalid)
+    ));
+    assert_eq!(create(&database, None, "\u{FEFF}Work\u{2028}").name, "Work");
+    assert_eq!(create(&database, None, "Work\u{85}").name, "Work\u{85}");
+}
