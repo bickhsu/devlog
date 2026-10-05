@@ -23,6 +23,16 @@ export type {
   UpdateEntryInput,
 } from './repositories/contracts'
 export {
+  createCaptureSession,
+  DEFAULT_AUTOSAVE_DELAY_MS,
+} from './use-cases/capture'
+export type {
+  AutosaveTimer,
+  CaptureComposerState,
+  CaptureSession,
+  CaptureSessionOptions,
+} from './use-cases/capture'
+export {
   archiveContext,
   buildContextTree,
   CONTEXT_PATH_SEPARATOR,

@@ -1,6 +1,7 @@
 //! Native SQLite persistence. React never sees SQL, file paths, or driver
 //! errors; it reaches this module only through Tauri commands.
 
+pub mod capture;
 mod clock;
 pub mod contexts;
 mod database;

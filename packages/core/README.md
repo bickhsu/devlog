@@ -25,11 +25,23 @@ Repository 負責配置 ID 與時間；domain 日期使用 `Date`，序列化由
 - `findContextPath` 包含 archived contexts，讓歷史 entry 仍能顯示 `/Work/DevLog` 這類 path。`formatContextPath` 輸出 `/A/B`，沒有 context 時為 `/`；名稱禁止 `/` 所以不會混淆。
 - `listContextHistory` 查詢 context 與所有 descendants（含 archived）的 entries，依 `(createdAt, id)` 遞增排序。
 
+## Capture Use Case
+
+`src/use-cases/capture.ts` 的 `createCaptureSession({ repository, surface })` 是一個 composer 的草稿生命週期，main 與 quick-capture 各建一個。它不像 context use cases 是單次呼叫的函式，而是持有待保存編輯與 autosave timer 的 session，因為 submit 必須能取消尚未執行的 autosave：
+
+- `load()`：恢復該 surface 的 draft；沒有 draft 時回傳空白內容與預設 context。
+- `change(state)`：記錄編輯，debounce 後自動保存（預設 500ms）。
+- `flush()`：立即保存尚未送出的編輯，並等待先前的寫入完成；window hide／close 時呼叫。
+- `discard()`：取消待保存的編輯並刪除 draft。
+- `submit(state)`：先以 `normalizeEntryContent` 驗證，失敗時不碰儲存也保留待保存的編輯；通過後取消待執行的 autosave、排在已開始的 save 之後提交。
+
+Session 內所有 repository 呼叫依呼叫順序執行，因此成功 submit 後不會有 late autosave 重建已清除的 draft；submit 開始後的新編輯則成為下一份 draft。Autosave 沒有呼叫端可 reject，失敗透過 `onAutosaveError` 回報，並在下一次 `flush()` 重試。失敗的寫入只在之後沒有新編輯、discard 或 submit 時才放回待保存的編輯，避免已清除的 draft 被寫回。若編輯選的 context 已在別處被封存或移除，session 改以無 context 保存文字，並仍以 `ContextArchived`／`ContextNotFound` reject，讓 composer 清除 picker。
+
 ## 錯誤與執行順序
 
 失敗以 `DomainError` reject：找不到 entry／context 使用 `EntryNotFound`／`ContextNotFound`；不可選取的 archived context 使用 `ContextArchived`；內容、名稱與同層名稱衝突使用對應的 validation codes。Draft 儲存失敗使用 `DraftSaveFailed`，其他儲存失敗使用 `StorageUnavailable`。不可向上層洩漏原始 driver 或 IPC diagnostics。
 
-Desktop adapter 須依 surface 序列化 draft mutations。Submit 前取消尚未執行的 debounce、等待已開始的 save 完成，再提交；成功後不得讓 late save 重建 draft。不同 repository 方法的普通呼叫組合無法保證 submit 與 archive 所需的跨資料原子性，adapter 必須使用底層 transaction。
+Draft 的呼叫順序由 `CaptureSession` 負責，repository 與 adapter 不需排隊：session 依呼叫順序一次發出一個呼叫，submit 前取消尚未執行的 debounce、等待已開始的 save 完成再提交，成功後不會讓 late save 重建 draft。不同 repository 方法的普通呼叫組合無法保證 submit 與 archive 所需的跨資料原子性，adapter 必須使用底層 transaction。
 
 ## Fake 使用範例
 
