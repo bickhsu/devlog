@@ -236,3 +236,109 @@ fn concurrent_captures_on_both_surfaces_stay_consistent() {
         .content
         .starts_with("draft "));
 }
+
+mod commands {
+    use devlog_desktop_lib::commands::{
+        capture_draft, default_context_id, discard_draft, save_draft, submit_entry, CaptureInput,
+    };
+    use serde_json::json;
+
+    use super::*;
+
+    fn input(value: serde_json::Value) -> CaptureInput {
+        serde_json::from_value(value).expect("valid capture input")
+    }
+
+    #[test]
+    fn capture_commands_exchange_camel_case_dtos() {
+        let database = TestApp::new().open();
+        insert_context(&database, "devlog", false);
+
+        let draft = save_draft(
+            &database,
+            input(json!({ "surface": "quick-capture", "content": " raw ", "contextId": "devlog" })),
+        )
+        .unwrap();
+        let draft = serde_json::to_value(draft).unwrap();
+        assert_eq!(draft["surface"], "quick-capture");
+        assert_eq!(draft["content"], " raw ");
+        assert_eq!(draft["contextId"], "devlog");
+        assert!(draft["updatedAt"].is_i64());
+
+        let entry = submit_entry(
+            &database,
+            input(json!({ "surface": "quick-capture", "content": "done", "contextId": null })),
+        )
+        .unwrap();
+        let entry = serde_json::to_value(entry).unwrap();
+        let mut keys: Vec<_> = entry.as_object().unwrap().keys().cloned().collect();
+        keys.sort();
+        assert_eq!(
+            keys,
+            [
+                "content",
+                "contextId",
+                "createdAt",
+                "deletedAt",
+                "id",
+                "updatedAt"
+            ]
+        );
+        assert_eq!(entry["deletedAt"], serde_json::Value::Null);
+
+        assert_eq!(default_context_id(&database).unwrap(), None);
+        assert_eq!(capture_draft(&database, QuickCapture).unwrap(), None);
+        discard_draft(&database, QuickCapture).unwrap();
+    }
+
+    #[test]
+    fn capture_input_rejects_unknown_surfaces() {
+        let result = serde_json::from_value::<CaptureInput>(
+            json!({ "surface": "sidebar", "content": "x", "contextId": null }),
+        );
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn capture_failures_cross_ipc_as_domain_codes() {
+        let database = TestApp::new().open();
+        insert_context(&database, "archived", true);
+        let code = |error| serde_json::to_value(error).unwrap()["code"].clone();
+
+        let empty = submit_entry(
+            &database,
+            input(json!({ "surface": "main", "content": "  ", "contextId": null })),
+        );
+        assert_eq!(code(empty.unwrap_err()), "EMPTY_ENTRY_CONTENT");
+
+        let archived = save_draft(
+            &database,
+            input(json!({ "surface": "main", "content": "x", "contextId": "archived" })),
+        );
+        assert_eq!(code(archived.unwrap_err()), "CONTEXT_ARCHIVED");
+
+        let missing = submit_entry(
+            &database,
+            input(json!({ "surface": "main", "content": "x", "contextId": "missing" })),
+        );
+        assert_eq!(code(missing.unwrap_err()), "CONTEXT_NOT_FOUND");
+
+        database
+            .with_connection(|connection| {
+                connection.execute_batch(
+                    "CREATE TEMP TRIGGER fail_draft_insert BEFORE INSERT ON capture_drafts
+                     BEGIN SELECT RAISE(ABORT, 'injected failure'); END;",
+                )?;
+                Ok(())
+            })
+            .unwrap();
+        let failed = save_draft(
+            &database,
+            input(json!({ "surface": "main", "content": "x", "contextId": null })),
+        );
+        assert_eq!(
+            serde_json::to_value(failed.unwrap_err()).unwrap(),
+            json!({ "code": "DRAFT_SAVE_FAILED" })
+        );
+    }
+}
