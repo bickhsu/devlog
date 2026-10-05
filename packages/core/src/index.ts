@@ -8,18 +8,6 @@ export type {
 export { DomainError, DomainErrorCode } from './domain/errors'
 export { normalizeEntryContent } from './domain/content'
 export { normalizeContextName } from './domain/context-name'
-export {
-  createCaptureSession,
-  DEFAULT_AUTOSAVE_DELAY_MS,
-} from './capture/capture-session'
-export type {
-  AutosaveTimer,
-  CaptureComposerState,
-  CaptureSession,
-  CaptureSessionOptions,
-} from './capture/capture-session'
-export { createKeyedSerialQueue } from './capture/serial-queue'
-export type { KeyedSerialQueue } from './capture/serial-queue'
 export type {
   AppStateRepository,
   ContextQuery,
@@ -34,6 +22,16 @@ export type {
   SubmitEntryInput,
   UpdateEntryInput,
 } from './repositories/contracts'
+export {
+  createCaptureSession,
+  DEFAULT_AUTOSAVE_DELAY_MS,
+} from './use-cases/capture'
+export type {
+  AutosaveTimer,
+  CaptureComposerState,
+  CaptureSession,
+  CaptureSessionOptions,
+} from './use-cases/capture'
 export {
   archiveContext,
   buildContextTree,
@@ -50,3 +48,5 @@ export {
   resolveContextPath,
 } from './use-cases/contexts'
 export type { ContextPathOption, ContextTreeNode } from './use-cases/contexts'
+export { createKeyedSerialQueue } from './lib/serial-queue'
+export type { KeyedSerialQueue } from './lib/serial-queue'

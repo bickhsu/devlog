@@ -1,7 +1,7 @@
 import { normalizeEntryContent } from '../domain/content'
 import type { CaptureSurface, Entry } from '../domain/models'
 import type { AppStateRepository } from '../repositories/contracts'
-import { createKeyedSerialQueue } from './serial-queue'
+import { createKeyedSerialQueue } from '../lib/serial-queue'
 
 /** What a composer shows: raw text plus its selected context. */
 export type CaptureComposerState = {
