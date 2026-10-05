@@ -85,7 +85,7 @@ export function EntryItemPreview() {
             content={content}
             timeLabel="09:41"
             dateTime="2026-09-17T09:41:00+08:00"
-            context={{ path: "DevLog / Interface / Components" }}
+            context={{ path: "/DevLog/Interface/Components" }}
             {...(editing
               ? {
                   state: "editing" as const,
