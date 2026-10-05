@@ -123,23 +123,35 @@ pub fn create(
             require_active(transaction, parent_id)?;
         }
         ensure_unique_sibling(transaction, parent_id, name, None)?;
+        Ok(insert_in(transaction, parent_id, name)?)
+    })
+}
 
-        let now = now_millis();
-        let context = ContextRecord {
-            id: Uuid::now_v7().to_string(),
-            parent_id: parent_id.map(str::to_owned),
-            name: name.to_owned(),
-            created_at: now,
-            updated_at: now,
-            archived_at: None,
-            deleted_at: None,
-        };
-        transaction.execute(
-            "INSERT INTO contexts (id, parent_id, name, created_at, updated_at)
-             VALUES (?1, ?2, ?3, ?4, ?4)",
-            params![context.id, context.parent_id, context.name, now],
-        )?;
-        Ok(context)
+/// `mkdir -p` for a root-first list of names: each segment reuses the active
+/// sibling with the same name (ASCII case-insensitive) or is created under
+/// the previous one. One transaction, so a failing segment leaves no new
+/// ancestors behind. Returns the last segment.
+pub fn create_path(database: &Database, names: &[String]) -> Result<ContextRecord, ContextError> {
+    let names = names
+        .iter()
+        .map(|name| normalize_name(name))
+        .collect::<Result<Vec<_>, _>>()?;
+    if names.is_empty() {
+        return Err(ContextError::NameInvalid);
+    }
+
+    database.with_transaction(|transaction| {
+        let mut parent: Option<ContextRecord> = None;
+        for name in names {
+            let parent_id = parent.as_ref().map(|context| context.id.as_str());
+            let existing = find_active_sibling(transaction, parent_id, name, None)?;
+            let context = match existing {
+                Some(context) => context,
+                None => insert_in(transaction, parent_id, name)?,
+            };
+            parent = Some(context);
+        }
+        Ok(parent.expect("names is not empty"))
     })
 }
 
@@ -233,27 +245,63 @@ fn require_active(connection: &Connection, id: &str) -> Result<ContextRecord, Co
     Ok(context)
 }
 
-/// Same rule as the `contexts_active_sibling_name` index (NOCASE folds ASCII
-/// only), checked first so a conflict maps to a specific error code.
+/// Checked first so a conflict maps to a specific error code instead of a
+/// constraint violation from the index.
 fn ensure_unique_sibling(
     connection: &Connection,
     parent_id: Option<&str>,
     name: &str,
     except_id: Option<&str>,
 ) -> Result<(), ContextError> {
-    let conflict: bool = connection.query_row(
-        "SELECT EXISTS (
-           SELECT 1 FROM contexts
-           WHERE parent_id IS ?1 AND name = ?2 COLLATE NOCASE
-             AND archived_at IS NULL AND deleted_at IS NULL AND id IS NOT ?3
-         )",
-        params![parent_id, name, except_id],
-        |row| row.get(0),
-    )?;
-    if conflict {
+    if find_active_sibling(connection, parent_id, name, except_id)?.is_some() {
         return Err(ContextError::NameConflict);
     }
     Ok(())
+}
+
+/// Same rule as the `contexts_active_sibling_name` index (NOCASE folds ASCII
+/// only).
+fn find_active_sibling(
+    connection: &Connection,
+    parent_id: Option<&str>,
+    name: &str,
+    except_id: Option<&str>,
+) -> rusqlite::Result<Option<ContextRecord>> {
+    connection
+        .query_row(
+            &format!(
+                "SELECT {COLUMNS} FROM contexts
+                 WHERE parent_id IS ?1 AND name = ?2 COLLATE NOCASE
+                   AND archived_at IS NULL AND deleted_at IS NULL AND id IS NOT ?3"
+            ),
+            params![parent_id, name, except_id],
+            from_row,
+        )
+        .optional()
+}
+
+/// Callers have already checked the parent and sibling names.
+fn insert_in(
+    connection: &Connection,
+    parent_id: Option<&str>,
+    name: &str,
+) -> rusqlite::Result<ContextRecord> {
+    let now = now_millis();
+    let context = ContextRecord {
+        id: Uuid::now_v7().to_string(),
+        parent_id: parent_id.map(str::to_owned),
+        name: name.to_owned(),
+        created_at: now,
+        updated_at: now,
+        archived_at: None,
+        deleted_at: None,
+    };
+    connection.execute(
+        "INSERT INTO contexts (id, parent_id, name, created_at, updated_at)
+         VALUES (?1, ?2, ?3, ?4, ?4)",
+        params![context.id, context.parent_id, context.name, now],
+    )?;
+    Ok(context)
 }
 
 fn from_row(row: &Row<'_>) -> rusqlite::Result<ContextRecord> {

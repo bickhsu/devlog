@@ -45,6 +45,12 @@ pub struct CreateContextInput {
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct CreateContextPathInput {
+    pub names: Vec<String>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct RenameContextInput {
     pub id: String,
     pub name: String,
@@ -74,6 +80,13 @@ pub fn list(database: &Database, include_archived: bool) -> Result<Vec<ContextDt
 
 pub fn create(database: &Database, input: CreateContextInput) -> Result<ContextDto, CommandError> {
     Ok(contexts::create(database, input.parent_id.as_deref(), &input.name)?.into())
+}
+
+pub fn create_path(
+    database: &Database,
+    input: CreateContextPathInput,
+) -> Result<ContextDto, CommandError> {
+    Ok(contexts::create_path(database, &input.names)?.into())
 }
 
 pub fn rename(database: &Database, input: RenameContextInput) -> Result<ContextDto, CommandError> {
@@ -106,6 +119,14 @@ pub fn create_context(
     input: CreateContextInput,
 ) -> Result<ContextDto, CommandError> {
     create(&database, input)
+}
+
+#[tauri::command]
+pub fn create_context_path(
+    database: State<'_, Database>,
+    input: CreateContextPathInput,
+) -> Result<ContextDto, CommandError> {
+    create_path(&database, input)
 }
 
 #[tauri::command]

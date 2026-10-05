@@ -19,6 +19,7 @@ Repository 負責配置 ID 與時間；domain 日期使用 `Date`，序列化由
 `src/use-cases/contexts.ts` 是 UI 操作 context 的入口，只依賴 repository 介面：
 
 - `createContext`／`renameContext` 先以 `normalizeContextName` 拒絕空白或含 `/` 的名稱，再交給 repository；同層名稱衝突、parent 不存在或已封存由 repository 判定，因為只有它看得到並行寫入。
+- `createContextPath` 以 `parseContextPath` 解析 `/Work/DevLog/New` 這類輸入，交給 repository 的 `createPath`：逐段沿用同名 active context 或建立，整條 path 原子完成，任一段失敗都不留下新 context。
 - `archiveContext` 委派給 repository 的原子 subtree archive。
 - `listActiveContextTree` 回傳 active tree，同層依名稱排序，每個節點帶完整 path；`listActiveContextPaths` 依同樣順序攤平，供 path picker 與補全使用。
 - `findContextPath` 包含 archived contexts，讓歷史 entry 仍能顯示 `/Work/DevLog` 這類 path。`formatContextPath` 輸出 `/A/B`，沒有 context 時為 `/`；名稱禁止 `/` 所以不會混淆。

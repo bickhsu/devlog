@@ -312,3 +312,72 @@ fn deleted_contexts_are_neither_active_nor_listed() {
     ));
     create(&database, None, "work");
 }
+
+fn names(path: &[&str]) -> Vec<String> {
+    path.iter().map(|name| (*name).to_owned()).collect()
+}
+
+#[test]
+fn create_path_creates_missing_segments_and_reuses_existing_ones() {
+    let database = TestDataDir::new().open();
+    let work = create(&database, None, "Work");
+
+    let core = contexts::create_path(&database, &names(&["work", " DevLog ", "Core"])).unwrap();
+    let devlog = find(&database, core.parent_id.as_deref().unwrap());
+
+    assert_eq!(core.name, "Core");
+    assert_eq!(devlog.name, "DevLog");
+    assert_eq!(devlog.parent_id.as_deref(), Some(work.id.as_str()));
+    assert_eq!(
+        contexts::create_path(&database, &names(&["WORK", "devlog", "CORE"])).unwrap(),
+        core
+    );
+    assert_eq!(active_names(&database), ["Work", "DevLog", "Core"]);
+}
+
+#[test]
+fn create_path_skips_archived_segments() {
+    let database = TestDataDir::new().open();
+    let old = create(&database, None, "Work");
+    contexts::archive(&database, &old.id).unwrap();
+
+    let child = contexts::create_path(&database, &names(&["Work", "DevLog"])).unwrap();
+    let work = find(&database, child.parent_id.as_deref().unwrap());
+
+    assert_ne!(work.id, old.id);
+    assert!(!work.is_archived());
+}
+
+#[test]
+fn create_path_rejects_invalid_names_before_writing() {
+    let database = TestDataDir::new().open();
+
+    for path in [names(&[]), names(&["Work", " "]), names(&["Work", "a/b"])] {
+        assert!(matches!(
+            contexts::create_path(&database, &path),
+            Err(ContextError::NameInvalid)
+        ));
+    }
+    assert!(contexts::list(&database, true).unwrap().is_empty());
+}
+
+#[test]
+fn failed_create_path_rolls_back_created_ancestors() {
+    let data_dir = TestDataDir::new();
+    let database = data_dir.open();
+    create(&database, None, "Work");
+    // Fail the third segment after the second was inserted.
+    data_dir
+        .raw_connection()
+        .execute_batch(
+            "CREATE TRIGGER fail_core BEFORE INSERT ON contexts WHEN NEW.name = 'Core'
+             BEGIN SELECT RAISE(ABORT, 'injected failure'); END;",
+        )
+        .unwrap();
+
+    assert!(matches!(
+        contexts::create_path(&database, &names(&["Work", "DevLog", "Core"])),
+        Err(ContextError::Storage(_))
+    ));
+    assert_eq!(active_names(&database), ["Work"]);
+}

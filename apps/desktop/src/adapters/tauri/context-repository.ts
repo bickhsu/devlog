@@ -3,6 +3,7 @@ import type {
   ContextQuery,
   ContextRepository,
   CreateContextInput,
+  CreateContextPathInput,
   RenameContextInput,
 } from "@devlog/core"
 
@@ -11,7 +12,8 @@ import { invokeTauri } from "@/adapters/tauri/invoke"
 
 /**
  * ContextRepository backed by the native context commands. Validation,
- * sibling conflicts, and the atomic subtree archive happen in Rust.
+ * sibling conflicts, atomic path creation, and the atomic subtree archive
+ * happen in Rust.
  */
 export class TauriContextRepository implements ContextRepository {
   async findById(id: string): Promise<Context | null> {
@@ -30,6 +32,14 @@ export class TauriContextRepository implements ContextRepository {
   async create(input: CreateContextInput): Promise<Context> {
     const dto = await invokeTauri<ContextDto, { input: CreateContextInput }>(
       "create_context",
+      { input },
+    )
+    return contextFromDto(dto)
+  }
+
+  async createPath(input: CreateContextPathInput): Promise<Context> {
+    const dto = await invokeTauri<ContextDto, { input: CreateContextPathInput }>(
+      "create_context_path",
       { input },
     )
     return contextFromDto(dto)

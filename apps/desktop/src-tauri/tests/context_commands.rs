@@ -2,7 +2,7 @@ mod common;
 
 use common::TestDataDir;
 use devlog_desktop_lib::commands::contexts::{
-    self, ContextDto, CreateContextInput, RenameContextInput,
+    self, ContextDto, CreateContextInput, CreateContextPathInput, RenameContextInput,
 };
 use devlog_desktop_lib::commands::{CommandError, ErrorCode};
 use serde_json::json;
@@ -100,5 +100,22 @@ fn context_failures_map_to_domain_error_codes() {
     assert_eq!(
         serde_json::to_value(error).unwrap(),
         json!({ "code": "CONTEXT_ARCHIVED" })
+    );
+}
+
+#[test]
+fn create_path_command_accepts_names_and_returns_the_leaf() {
+    let database = TestDataDir::new().open();
+    let input: CreateContextPathInput =
+        serde_json::from_value(json!({ "names": ["Work", "DevLog"] })).unwrap();
+
+    let leaf = contexts::create_path(&database, input).unwrap();
+    assert_eq!(leaf.name, "DevLog");
+    assert_eq!(contexts::list(&database, false).unwrap().len(), 2);
+
+    let empty: CreateContextPathInput = serde_json::from_value(json!({ "names": [] })).unwrap();
+    assert_eq!(
+        code(contexts::create_path(&database, empty)),
+        ErrorCode::ContextNameInvalid
     );
 }

@@ -72,6 +72,11 @@ export type CreateContextInput = {
   readonly name: string
 }
 
+export type CreateContextPathInput = {
+  /** Root-first segment names, each normalized with normalizeContextName. */
+  readonly names: readonly string[]
+}
+
 export type RenameContextInput = {
   readonly id: string
   /** Name normalized by the caller with normalizeContextName. */
@@ -89,6 +94,12 @@ export interface ContextRepository {
   /** Flat hierarchy via parentId; consumers own display ordering. */
   list(query?: ContextQuery): Promise<Context[]>
   create(input: CreateContextInput): Promise<Context>
+  /**
+   * Like `mkdir -p`: reuse each segment's active same-name context (ASCII
+   * case-insensitive) or create it, all in one transaction, and return the
+   * last segment. Any failure leaves no new context behind.
+   */
+  createPath(input: CreateContextPathInput): Promise<Context>
   rename(input: RenameContextInput): Promise<Context>
   /**
    * Atomically archive the subtree and clear matching current/draft context

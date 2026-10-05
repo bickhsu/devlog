@@ -32,6 +32,16 @@ export async function createContext(
   })
 }
 
+/** Creates every missing segment of a typed path such as `/Work/DevLog`. */
+export async function createContextPath(
+  contexts: ContextRepository,
+  path: string,
+): Promise<Context> {
+  const names = parseContextPath(path)
+  if (names.length === 0) throw new DomainError(DomainErrorCode.ContextNameInvalid)
+  return contexts.createPath({ names })
+}
+
 export async function renameContext(
   contexts: ContextRepository,
   input: RenameContextInput,

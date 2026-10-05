@@ -4,6 +4,7 @@ import {
   archiveContext,
   buildContextTree,
   createContext,
+  createContextPath,
   DomainError,
   DomainErrorCode,
   findContextPath,
@@ -18,6 +19,7 @@ import {
   type ContextRepository,
   type ContextTreeNode,
   type CreateContextInput,
+  type CreateContextPathInput,
   type Entry,
   type EntryRepository,
   type ListEntriesByContextInput,
@@ -50,6 +52,26 @@ class InMemoryContextRepository implements ContextRepository {
     }
     this.contexts.set(context.id, context)
     return structuredClone(context)
+  }
+
+  /** Snapshot-and-restore stands in for the adapter's transaction. */
+  async createPath(input: CreateContextPathInput): Promise<Context> {
+    const snapshot = new Map(this.contexts)
+    try {
+      let leaf: Context | undefined
+      for (const name of input.names) {
+        const parentId = leaf?.id ?? null
+        leaf = [...this.contexts.values()].find((context) =>
+          context.archivedAt === null && context.parentId === parentId &&
+          context.name.toLowerCase() === name.toLowerCase()) ??
+          await this.create({ parentId, name })
+      }
+      return structuredClone(leaf!)
+    } catch (error) {
+      this.contexts.clear()
+      for (const [id, context] of snapshot) this.contexts.set(id, context)
+      throw error
+    }
   }
 
   async rename(input: RenameContextInput): Promise<Context> {
@@ -290,16 +312,36 @@ describe('typed context paths', () => {
 
   test('list active paths flattened in tree order', async () => {
     const repository = new InMemoryContextRepository()
-    const work = await createContext(repository, { parentId: null, name: 'Work' })
-    const devlog = await createContext(repository, { parentId: work.id, name: 'DevLog' })
-    await createContext(repository, { parentId: devlog.id, name: 'Core' })
-    await createContext(repository, { parentId: null, name: 'Home' })
-    await createContext(repository, { parentId: work.id, name: 'API' })
-    const old = await createContext(repository, { parentId: work.id, name: 'Old' })
+    await createContextPath(repository, '/Work/DevLog/Core')
+    await createContextPath(repository, '/Home')
+    await createContextPath(repository, '/Work/API')
+    const old = await createContextPath(repository, '/Work/Old')
     await archiveContext(repository, old.id)
 
     expect((await listActiveContextPaths(repository))
       .map((option) => formatContextPath(option.path)))
       .toEqual(['/Home', '/Work', '/Work/API', '/Work/DevLog', '/Work/DevLog/Core'])
+  })
+
+  test('create missing segments and reuse existing ones ignoring ASCII case', async () => {
+    const repository = new InMemoryContextRepository()
+    const work = await createContext(repository, { parentId: null, name: 'Work' })
+
+    const core = await createContextPath(repository, '/work/DevLog/Core/')
+    const path = await findContextPath(repository, core.id)
+    expect(path[0].id).toBe(work.id)
+    expect(formatContextPath(path)).toBe('/Work/DevLog/Core')
+    expect((await createContextPath(repository, '/WORK/devlog/core')).id).toBe(core.id)
+    expect(repository.contexts.size).toBe(3)
+  })
+
+  test('reject empty or invalid paths without creating anything', async () => {
+    const repository = new InMemoryContextRepository()
+
+    for (const path of ['/', 'Work', '/Work//Core']) {
+      await expect(createContextPath(repository, path))
+        .rejects.toMatchObject({ code: DomainErrorCode.ContextNameInvalid })
+    }
+    expect(repository.contexts.size).toBe(0)
   })
 })

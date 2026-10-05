@@ -16,6 +16,7 @@ pub fn handler<R: tauri::Runtime>() -> impl Fn(tauri::ipc::Invoke<R>) -> bool + 
         contexts::find_context,
         contexts::list_contexts,
         contexts::create_context,
+        contexts::create_context_path,
         contexts::rename_context,
         contexts::archive_context,
     ]
