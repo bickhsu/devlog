@@ -1,8 +1,8 @@
 use std::path::Path;
-use std::sync::{Mutex, PoisonError};
+use std::sync::{Mutex, MutexGuard, PoisonError};
 use std::time::{Duration, Instant};
 
-use rusqlite::Connection;
+use rusqlite::{Connection, Transaction, TransactionBehavior};
 
 use super::error::PersistenceError;
 use super::migrations::{self, Migration};
@@ -57,13 +57,35 @@ impl Database {
         &self,
         operation: impl FnOnce(&mut Connection) -> Result<T, PersistenceError>,
     ) -> Result<T, PersistenceError> {
+        operation(&mut self.lock())
+    }
+
+    /// Runs `operation` in a `BEGIN IMMEDIATE` transaction that commits only
+    /// when it returns `Ok`. Taking the write lock up front means checks made
+    /// inside (e.g. sibling-name conflicts) still hold at commit, even against
+    /// another app instance. Any `Err` drops the transaction and rolls back.
+    pub fn with_transaction<T, E>(
+        &self,
+        operation: impl FnOnce(&Transaction<'_>) -> Result<T, E>,
+    ) -> Result<T, E>
+    where
+        E: From<PersistenceError>,
+    {
+        let mut connection = self.lock();
+        let transaction = connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(PersistenceError::from)?;
+        let value = operation(&transaction)?;
+        transaction.commit().map_err(PersistenceError::from)?;
+        Ok(value)
+    }
+
+    fn lock(&self) -> MutexGuard<'_, Connection> {
         // A panic mid-operation drops any open transaction, which rolls it
         // back, so the connection is still consistent after poisoning.
-        let mut connection = self
-            .connection
+        self.connection
             .lock()
-            .unwrap_or_else(PoisonError::into_inner);
-        operation(&mut connection)
+            .unwrap_or_else(PoisonError::into_inner)
     }
 }
 
