@@ -10,8 +10,9 @@ use super::clock::now_millis;
 use super::database::Database;
 use super::error::PersistenceError;
 
-/// A stored context. `deleted_at` marks it archived; rows are never removed
-/// so historical entries keep resolving their context and path.
+/// A stored context. Archived contexts stay as history so entries keep
+/// resolving their context and path. `deleted_at` is reserved for a future
+/// delete action and is never set yet; such rows are treated as gone.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ContextRecord {
     pub id: String,
@@ -19,11 +20,16 @@ pub struct ContextRecord {
     pub name: String,
     pub created_at: i64,
     pub updated_at: i64,
+    pub archived_at: Option<i64>,
     pub deleted_at: Option<i64>,
 }
 
 impl ContextRecord {
     pub fn is_archived(&self) -> bool {
+        self.archived_at.is_some()
+    }
+
+    pub fn is_deleted(&self) -> bool {
         self.deleted_at.is_some()
     }
 }
@@ -65,7 +71,7 @@ impl From<rusqlite::Error> for ContextError {
     }
 }
 
-const COLUMNS: &str = "id, parent_id, name, created_at, updated_at, deleted_at";
+const COLUMNS: &str = "id, parent_id, name, created_at, updated_at, archived_at, deleted_at";
 
 /// The archived root plus every descendant, bound to `?1`. `UNION` (not
 /// `UNION ALL`) stops on revisited rows, so a malformed cycle cannot loop.
@@ -86,7 +92,8 @@ pub fn find(database: &Database, id: &str) -> Result<Option<ContextRecord>, Pers
     database.with_connection(|connection| Ok(find_in(connection, id)?))
 }
 
-/// Ordered by creation for a stable result; display ordering belongs to Core.
+/// Never includes deleted contexts. Ordered by creation for a stable result;
+/// display ordering belongs to Core.
 pub fn list(
     database: &Database,
     include_archived: bool,
@@ -94,7 +101,7 @@ pub fn list(
     database.with_connection(|connection| {
         let mut statement = connection.prepare(&format!(
             "SELECT {COLUMNS} FROM contexts
-             WHERE ?1 OR deleted_at IS NULL
+             WHERE deleted_at IS NULL AND (?1 OR archived_at IS NULL)
              ORDER BY created_at, id"
         ))?;
         let contexts = statement
@@ -124,6 +131,7 @@ pub fn create(
             name: name.to_owned(),
             created_at: now,
             updated_at: now,
+            archived_at: None,
             deleted_at: None,
         };
         transaction.execute(
@@ -159,10 +167,12 @@ pub fn rename(database: &Database, id: &str, name: &str) -> Result<ContextRecord
 /// Archives the context and its descendants in one transaction and clears
 /// current/draft references into the subtree. Draft content and entry
 /// `context_id`s are untouched so nothing typed or logged is lost.
-/// Descendants archived earlier keep their original `deleted_at`.
+/// Descendants archived earlier keep their original `archived_at`.
 pub fn archive(database: &Database, id: &str) -> Result<(), ContextError> {
     database.with_transaction(|transaction| {
-        let root = find_in(transaction, id)?.ok_or(ContextError::NotFound)?;
+        let root = find_in(transaction, id)?
+            .filter(|context| !context.is_deleted())
+            .ok_or(ContextError::NotFound)?;
         if root.is_archived() {
             return Ok(());
         }
@@ -170,8 +180,8 @@ pub fn archive(database: &Database, id: &str) -> Result<(), ContextError> {
         let now = now_millis();
         transaction.execute(
             with_subtree!(
-                "UPDATE contexts SET deleted_at = ?2, updated_at = ?2
-                 WHERE deleted_at IS NULL AND id IN subtree"
+                "UPDATE contexts SET archived_at = ?2, updated_at = ?2
+                 WHERE archived_at IS NULL AND deleted_at IS NULL AND id IN subtree"
             ),
             params![id, now],
         )?;
@@ -214,7 +224,9 @@ fn find_in(connection: &Connection, id: &str) -> rusqlite::Result<Option<Context
 }
 
 fn require_active(connection: &Connection, id: &str) -> Result<ContextRecord, ContextError> {
-    let context = find_in(connection, id)?.ok_or(ContextError::NotFound)?;
+    let context = find_in(connection, id)?
+        .filter(|context| !context.is_deleted())
+        .ok_or(ContextError::NotFound)?;
     if context.is_archived() {
         return Err(ContextError::Archived);
     }
@@ -233,7 +245,7 @@ fn ensure_unique_sibling(
         "SELECT EXISTS (
            SELECT 1 FROM contexts
            WHERE parent_id IS ?1 AND name = ?2 COLLATE NOCASE
-             AND deleted_at IS NULL AND id IS NOT ?3
+             AND archived_at IS NULL AND deleted_at IS NULL AND id IS NOT ?3
          )",
         params![parent_id, name, except_id],
         |row| row.get(0),
@@ -251,6 +263,7 @@ fn from_row(row: &Row<'_>) -> rusqlite::Result<ContextRecord> {
         name: row.get(2)?,
         created_at: row.get(3)?,
         updated_at: row.get(4)?,
-        deleted_at: row.get(5)?,
+        archived_at: row.get(5)?,
+        deleted_at: row.get(6)?,
     })
 }

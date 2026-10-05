@@ -18,6 +18,7 @@ pub struct ContextDto {
     pub name: String,
     pub created_at: i64,
     pub updated_at: i64,
+    pub archived_at: Option<i64>,
     pub deleted_at: Option<i64>,
 }
 
@@ -29,6 +30,7 @@ impl From<ContextRecord> for ContextDto {
             name: record.name,
             created_at: record.created_at,
             updated_at: record.updated_at,
+            archived_at: record.archived_at,
             deleted_at: record.deleted_at,
         }
     }

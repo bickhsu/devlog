@@ -13,6 +13,9 @@ export type Context = {
   readonly name: string
   readonly createdAt: Date
   readonly updatedAt: Date
+  /** Retired but kept as history; entries keep their path. */
+  readonly archivedAt: Date | null
+  /** Reserved for a future delete action, separate from archiving. */
   readonly deletedAt: Date | null
 }
 

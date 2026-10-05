@@ -9,7 +9,8 @@ pub struct Migration {
     pub sql: &'static str,
 }
 
-/// Append new migrations; never edit one that has shipped.
+/// Append new migrations; never edit one that has shipped. No release has
+/// shipped yet, so 0001 is still the editable initial schema.
 pub const MIGRATIONS: &[Migration] = &[Migration {
     version: 1,
     sql: include_str!("migrations/0001_initial.sql"),

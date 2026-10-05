@@ -6,7 +6,7 @@
 
 - `EntryRepository`：取得、編輯、依時間區間或 context 查詢 entry。`listBetween` 使用 `[from, to)`，排除 soft-deleted entries，依 `(createdAt, id)` 遞增排序。`listByContext` 支援 descendants 與 archived context 歷史；分組與排序由 consumer 決定。
 - `AppStateRepository`：統一管理草稿、預設 context 與提交。`getDefaultContextId()` 讀取新草稿的預選值，初始為 `null`；既有草稿保留自己的 context。依 surface 讀取、保存與捨棄 draft，保留原始文字並允許空白。`submitEntry()` 驗證最新 payload，以單一 transaction 建立 entry、更新預設 context（包含 `null`），且只清除來源 surface 的 draft；失敗不得留下部分變更。
-- `ContextRepository`：建立、改名、封存及查詢 context。`list` 預設排除 archived contexts；`findById` 保留歷史查詢能力。Archive 必須原子地封存 subtree、清除受影響的 current／draft context references，並保留 draft content 與歷史 entry relationships。
+- `ContextRepository`：建立、改名、封存及查詢 context。封存寫入 `archivedAt`；`deletedAt` 保留給未來的刪除，兩者皆為 `null` 才算 active。`list` 預設排除 archived contexts、永不包含 deleted contexts；`findById` 保留歷史查詢能力。Archive 必須原子地封存 subtree、清除受影響的 current／draft context references，並保留 draft content 與歷史 entry relationships。
 
 預設 context 不提供獨立 setter；保存草稿不改變預設值，成功提交才更新，封存時則清除受影響的值。介面合併不改變 domain model 或資料表的分組。
 

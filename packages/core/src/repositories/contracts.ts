@@ -79,7 +79,7 @@ export type RenameContextInput = {
 }
 
 export type ContextQuery = {
-  /** Defaults to false; true includes archived contexts for history/path lookup. */
+  /** Defaults to false; true includes archived contexts for history/path lookup. Never includes deleted contexts. */
   readonly includeArchived?: boolean
 }
 

@@ -38,6 +38,7 @@ fn context_dto_crosses_ipc_as_camel_case_with_epoch_millis() {
             "name": "DevLog",
             "createdAt": child.created_at,
             "updatedAt": child.updated_at,
+            "archivedAt": null,
             "deletedAt": null,
         })
     );
@@ -59,7 +60,8 @@ fn commands_cover_the_repository_lifecycle() {
     contexts::archive(&database, &work.id).unwrap();
 
     let found: ContextDto = contexts::find(&database, &work.id).unwrap().unwrap();
-    assert!(found.deleted_at.is_some());
+    assert!(found.archived_at.is_some());
+    assert_eq!(found.deleted_at, None);
     assert!(contexts::find(&database, "missing").unwrap().is_none());
     assert!(contexts::list(&database, false).unwrap().is_empty());
     assert_eq!(contexts::list(&database, true).unwrap(), [found]);

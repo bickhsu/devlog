@@ -34,7 +34,7 @@ class InMemoryContextRepository implements ContextRepository {
 
   async list(query?: ContextQuery): Promise<Context[]> {
     return structuredClone([...this.contexts.values()]
-      .filter((context) => query?.includeArchived || context.deletedAt === null))
+      .filter((context) => query?.includeArchived || context.archivedAt === null))
   }
 
   async create(input: CreateContextInput): Promise<Context> {
@@ -44,7 +44,7 @@ class InMemoryContextRepository implements ContextRepository {
     const now = new Date()
     const context: Context = {
       id: `ctx-${this.nextId++}`, parentId: input.parentId, name: input.name,
-      createdAt: now, updatedAt: now, deletedAt: null,
+      createdAt: now, updatedAt: now, archivedAt: null, deletedAt: null,
     }
     this.contexts.set(context.id, context)
     return structuredClone(context)
@@ -62,7 +62,7 @@ class InMemoryContextRepository implements ContextRepository {
   async archive(id: string): Promise<void> {
     const root = this.contexts.get(id)
     if (!root) throw new DomainError(DomainErrorCode.ContextNotFound)
-    if (root.deletedAt !== null) return
+    if (root.archivedAt !== null) return
     const now = new Date()
     const subtree = new Set([id])
     for (const context of this.contexts.values()) {
@@ -70,8 +70,8 @@ class InMemoryContextRepository implements ContextRepository {
     }
     for (const contextId of subtree) {
       const context = this.contexts.get(contextId)!
-      if (context.deletedAt === null) {
-        this.contexts.set(contextId, { ...context, deletedAt: now, updatedAt: now })
+      if (context.archivedAt === null) {
+        this.contexts.set(contextId, { ...context, archivedAt: now, updatedAt: now })
       }
     }
   }
@@ -79,13 +79,13 @@ class InMemoryContextRepository implements ContextRepository {
   private requireActive(id: string): Context {
     const context = this.contexts.get(id)
     if (!context) throw new DomainError(DomainErrorCode.ContextNotFound)
-    if (context.deletedAt !== null) throw new DomainError(DomainErrorCode.ContextArchived)
+    if (context.archivedAt !== null) throw new DomainError(DomainErrorCode.ContextArchived)
     return context
   }
 
   private ensureUniqueSibling(parentId: string | null, name: string, selfId?: string): void {
     const conflict = [...this.contexts.values()].some((context) =>
-      context.id !== selfId && context.deletedAt === null &&
+      context.id !== selfId && context.archivedAt === null &&
       context.parentId === parentId && context.name.toLowerCase() === name.toLowerCase())
     if (conflict) throw new DomainError(DomainErrorCode.ContextNameConflict)
   }
@@ -225,7 +225,7 @@ describe('active context tree', () => {
     const now = new Date(0)
     const orphan: Context = {
       id: 'orphan', parentId: 'gone', name: 'Orphan',
-      createdAt: now, updatedAt: now, deletedAt: null,
+      createdAt: now, updatedAt: now, archivedAt: null, deletedAt: null,
     }
     expect(buildContextTree([orphan]).map((node) => node.path)).toEqual([[orphan]])
   })

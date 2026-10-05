@@ -7,9 +7,10 @@ export type EntryDto = Omit<Entry, "createdAt" | "updatedAt" | "deletedAt"> & {
   readonly deletedAt: number | null
 }
 
-export type ContextDto = Omit<Context, "createdAt" | "updatedAt" | "deletedAt"> & {
+export type ContextDto = Omit<Context, "createdAt" | "updatedAt" | "archivedAt" | "deletedAt"> & {
   readonly createdAt: number
   readonly updatedAt: number
+  readonly archivedAt: number | null
   readonly deletedAt: number | null
 }
 
@@ -35,6 +36,7 @@ export function contextFromDto(dto: ContextDto): Context {
     ...dto,
     createdAt: new Date(dto.createdAt),
     updatedAt: new Date(dto.updatedAt),
+    archivedAt: dto.archivedAt === null ? null : new Date(dto.archivedAt),
     deletedAt: dto.deletedAt === null ? null : new Date(dto.deletedAt),
   }
 }

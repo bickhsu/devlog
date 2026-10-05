@@ -65,6 +65,7 @@ fn creates_root_and_child_contexts_with_uuid_v7_ids() {
     assert_eq!(work.parent_id, None);
     assert_eq!(devlog.parent_id.as_deref(), Some(work.id.as_str()));
     assert_eq!(work.created_at, work.updated_at);
+    assert_eq!(work.archived_at, None);
     assert_eq!(work.deleted_at, None);
     for id in [&work.id, &devlog.id] {
         let uuid = uuid::Uuid::parse_str(id).expect("id is a UUID");
@@ -202,7 +203,7 @@ fn archive_cascades_and_clears_references_but_keeps_history() {
     let archived_devlog = find(&database, &devlog.id);
     let archived_core = find(&database, &core.id);
     assert!(archived_devlog.is_archived());
-    assert_eq!(archived_core.deleted_at, archived_devlog.deleted_at);
+    assert_eq!(archived_core.archived_at, archived_devlog.archived_at);
     assert!(!find(&database, &work.id).is_archived());
     assert!(!find(&database, &infra.id).is_archived());
     assert_eq!(active_names(&database), ["Work", "Infra", "Home"]);
@@ -241,7 +242,7 @@ fn archiving_an_archived_context_is_a_no_op() {
     // A later parent archive leaves the earlier descendant timestamp alone.
     contexts::archive(&database, &work.id).unwrap();
     assert_eq!(find(&database, &devlog.id), archived);
-    assert!(find(&database, &work.id).deleted_at > archived.deleted_at);
+    assert!(find(&database, &work.id).archived_at > archived.archived_at);
 }
 
 #[test]
@@ -269,4 +270,45 @@ fn failed_archive_rolls_back_every_change() {
     assert!(!find(&database, &work.id).is_archived());
     assert!(!find(&database, &devlog.id).is_archived());
     assert_eq!(references(&connection), before);
+}
+
+#[test]
+fn archive_does_not_mark_contexts_deleted() {
+    let database = TestDataDir::new().open();
+    let work = create(&database, None, "Work");
+    contexts::archive(&database, &work.id).unwrap();
+
+    let archived = find(&database, &work.id);
+    assert!(archived.archived_at.is_some());
+    assert_eq!(archived.deleted_at, None);
+}
+
+#[test]
+fn deleted_contexts_are_neither_active_nor_listed() {
+    let data_dir = TestDataDir::new();
+    let database = data_dir.open();
+    let work = create(&database, None, "Work");
+    // No delete command exists yet; set the reserved column directly.
+    data_dir
+        .raw_connection()
+        .execute(
+            "UPDATE contexts SET deleted_at = 1 WHERE id = ?1",
+            [&work.id],
+        )
+        .unwrap();
+
+    assert!(contexts::list(&database, true).unwrap().is_empty());
+    assert!(matches!(
+        contexts::create(&database, Some(&work.id), "Child"),
+        Err(ContextError::NotFound)
+    ));
+    assert!(matches!(
+        contexts::rename(&database, &work.id, "Job"),
+        Err(ContextError::NotFound)
+    ));
+    assert!(matches!(
+        contexts::archive(&database, &work.id),
+        Err(ContextError::NotFound)
+    ));
+    create(&database, None, "work");
 }

@@ -159,9 +159,14 @@ fn active_sibling_context_names_are_unique_ignoring_ascii_case() {
             // Same name under a different parent is fine.
             insert_context(connection, "child", Some("root-a"), "Work")?;
 
-            // Archiving frees the name for a new active sibling.
-            connection.execute("UPDATE contexts SET deleted_at = 1 WHERE id = 'root-a'", [])?;
+            // Archiving or deleting frees the name for a new active sibling.
+            connection.execute(
+                "UPDATE contexts SET archived_at = 1 WHERE id = 'root-a'",
+                [],
+            )?;
             insert_context(connection, "root-c", None, "work")?;
+            connection.execute("UPDATE contexts SET deleted_at = 1 WHERE id = 'root-c'", [])?;
+            insert_context(connection, "root-d", None, "Work")?;
             Ok(())
         })
         .unwrap();

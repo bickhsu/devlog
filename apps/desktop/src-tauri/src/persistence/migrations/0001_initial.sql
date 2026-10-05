@@ -7,6 +7,9 @@ CREATE TABLE contexts (
   name TEXT NOT NULL,
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL,
+  -- Archiving retires a context but keeps it as history; deletion is a
+  -- separate, future action. Active means both are NULL.
+  archived_at INTEGER,
   deleted_at INTEGER,
   CHECK (parent_id IS NULL OR parent_id <> id),
   CHECK (trim(name, char(32, 9, 10, 11, 12, 13)) <> ''),
@@ -16,7 +19,7 @@ CREATE TABLE contexts (
 -- Active siblings cannot share a name; NOCASE folds ASCII letters only.
 CREATE UNIQUE INDEX contexts_active_sibling_name
   ON contexts (ifnull(parent_id, ''), name COLLATE NOCASE)
-  WHERE deleted_at IS NULL;
+  WHERE archived_at IS NULL AND deleted_at IS NULL;
 
 CREATE INDEX contexts_parent_id ON contexts (parent_id);
 
