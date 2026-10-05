@@ -1,7 +1,6 @@
 import { normalizeEntryContent } from '../domain/content'
 import type { CaptureSurface, Entry } from '../domain/models'
 import type { AppStateRepository } from '../repositories/contracts'
-import { createKeyedSerialQueue } from '../lib/serial-queue'
 
 /** What a composer shows: raw text plus its selected context. */
 export type CaptureComposerState = {
@@ -55,9 +54,17 @@ export function createCaptureSession({
   timer = defaultTimer,
   onAutosaveError = () => {},
 }: CaptureSessionOptions): CaptureSession {
-  const queue = createKeyedSerialQueue<CaptureSurface>()
+  // Every repository call chains onto this, so calls run one at a time in
+  // invocation order. It never rejects, so a failed call does not block later ones.
+  let tail: Promise<unknown> = Promise.resolve()
   let pending: CaptureComposerState | null = null
   let timerHandle: unknown = null
+
+  function enqueue<T>(task: () => Promise<T>): Promise<T> {
+    const result = tail.then(task)
+    tail = result.catch(() => undefined)
+    return result
+  }
 
   function cancelAutosave() {
     if (timerHandle !== null) timer.clear(timerHandle)
@@ -73,7 +80,7 @@ export function createCaptureSession({
     cancelAutosave()
     const state = pending
     pending = null
-    return queue.run(surface, async () => {
+    return enqueue(async () => {
       if (state === null) return
       try {
         await repository.saveDraft({ surface, ...state })
@@ -86,7 +93,7 @@ export function createCaptureSession({
 
   return {
     load() {
-      return queue.run(surface, async () => {
+      return enqueue(async () => {
         const draft = await repository.getDraft(surface)
         if (draft) return { content: draft.content, contextId: draft.contextId }
         return { content: '', contextId: await repository.getDefaultContextId() }
@@ -107,14 +114,14 @@ export function createCaptureSession({
     discard() {
       cancelAutosave()
       pending = null
-      return queue.run(surface, () => repository.discardDraft(surface))
+      return enqueue(() => repository.discardDraft(surface))
     },
 
     async submit(state) {
       const content = normalizeEntryContent(state.content)
       cancelAutosave()
       pending = null
-      return await queue.run(surface, async () => {
+      return await enqueue(async () => {
         try {
           return await repository.submitEntry({
             surface, content, contextId: state.contextId,

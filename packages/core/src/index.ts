@@ -48,5 +48,3 @@ export {
   resolveContextPath,
 } from './use-cases/contexts'
 export type { ContextPathOption, ContextTreeNode } from './use-cases/contexts'
-export { createKeyedSerialQueue } from './lib/serial-queue'
-export type { KeyedSerialQueue } from './lib/serial-queue'

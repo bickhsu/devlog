@@ -60,8 +60,8 @@ export interface AppStateRepository {
    * Validate the latest payload, then atomically create an entry,
    * set current context (including null), and clear
    * only this surface's draft. Failure must leave all three unchanged.
-   * Serialize save/discard/submit in invocation order per surface so an earlier
-   * pending save cannot recreate a draft after a successful submit.
+   * Call ordering is not required here: CaptureSession issues one call at a
+   * time per surface, so a pending save cannot recreate a submitted draft.
    */
   submitEntry(input: SubmitEntryInput): Promise<Entry>
 }

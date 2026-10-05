@@ -17,7 +17,7 @@ import {
   type UpdateEntryInput,
 } from '../index'
 
-/** Mutations finish synchronously in this fake; storage adapters need serialization. */
+/** Mutations finish synchronously in this fake; CaptureSession owns call ordering. */
 class InMemoryAppStateRepository implements AppStateRepository {
   private defaultContextId: string | null = null
   private readonly drafts = new Map<CaptureSurface, CaptureDraft>()
