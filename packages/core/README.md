@@ -14,6 +14,16 @@ Entry 編輯可修改 content 與 contextId，保留 id 與 createdAt。允許�
 
 Repository 負責配置 ID 與時間；domain 日期使用 `Date`，序列化由 adapter 處理。回傳資料應為 snapshot，修改回傳的 `Date` 不應改變儲存狀態。Entry content 與 context name 使用 Core normalization 規則；adapter 仍須在寫入邊界驗證資料完整性。
 
+## Context Use Cases
+
+`src/use-cases/contexts.ts` 是 UI 操作 context 的入口，只依賴 repository 介面：
+
+- `createContext`／`renameContext` 先以 `normalizeContextName` 拒絕空白或含 `/` 的名稱，再交給 repository；同層名稱衝突、parent 不存在或已封存由 repository 判定，因為只有它看得到並行寫入。
+- `archiveContext` 委派給 repository 的原子 subtree archive。
+- `listActiveContextTree` 回傳 capture picker 用的 active tree，同層依名稱排序，每個節點帶完整 path。
+- `findContextPath` 包含 archived contexts，讓歷史 entry 仍能顯示 `Work / DevLog` 這類 path；`formatContextPath` 以 ` / ` 串接，名稱禁止 `/` 所以不會混淆。
+- `listContextHistory` 查詢 context 與所有 descendants（含 archived）的 entries，依 `(createdAt, id)` 遞增排序。
+
 ## 錯誤與執行順序
 
 失敗以 `DomainError` reject：找不到 entry／context 使用 `EntryNotFound`／`ContextNotFound`；不可選取的 archived context 使用 `ContextArchived`；內容、名稱與同層名稱衝突使用對應的 validation codes。Draft 儲存失敗使用 `DraftSaveFailed`，其他儲存失敗使用 `StorageUnavailable`。不可向上層洩漏原始 driver 或 IPC diagnostics。
