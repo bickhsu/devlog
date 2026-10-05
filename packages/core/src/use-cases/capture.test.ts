@@ -46,6 +46,7 @@ class RecordingRepository implements AppStateRepository {
   readonly entries: Entry[] = []
   readonly log: string[] = []
   defaultContextId: string | null = null
+  readonly archivedContextIds = new Set<string>()
   failNext: 'save' | 'submit' | null = null
   private held: (() => void)[] | null = null
 
@@ -71,6 +72,7 @@ class RecordingRepository implements AppStateRepository {
     this.log.push(`save:start:${input.content}`)
     if (this.held) await new Promise<void>((release) => this.held?.push(release))
     if (this.takeFailure('save')) throw new DomainError(DomainErrorCode.DraftSaveFailed)
+    this.rejectArchived(input.contextId)
     const draft = { ...input, updatedAt: new Date() }
     this.drafts.set(input.surface, draft)
     this.log.push(`save:end:${input.content}`)
@@ -94,6 +96,12 @@ class RecordingRepository implements AppStateRepository {
     this.defaultContextId = input.contextId
     this.drafts.delete(input.surface)
     return entry
+  }
+
+  private rejectArchived(contextId: string | null): void {
+    if (contextId !== null && this.archivedContextIds.has(contextId)) {
+      throw new DomainError(DomainErrorCode.ContextArchived)
+    }
   }
 
   private takeFailure(kind: 'save' | 'submit'): boolean {
@@ -224,6 +232,42 @@ describe('capture session', () => {
     })])
     await session.flush()
     expect(repository.drafts.get('main')?.content).toBe('retry')
+  })
+
+  test.each(['submit', 'discard'] as const)(
+    'an in-flight save that fails cannot bring the draft back after %s',
+    async (action) => {
+      const { repository, timer, session, autosaveErrors } = setup()
+      repository.holdSaves()
+      session.change({ content: 'draft', contextId: null })
+      timer.fire()
+      await settle()
+
+      repository.failNext = 'save'
+      const done = action === 'submit'
+        ? session.submit({ content: 'draft', contextId: null })
+        : session.discard()
+      repository.releaseSaves()
+      await done
+      await settle()
+      await session.flush()
+
+      expect(autosaveErrors).toHaveLength(1)
+      expect(repository.drafts.has('main')).toBe(false)
+      expect(repository.log.filter((line) => line.startsWith('save:start'))).toHaveLength(1)
+    },
+  )
+
+  test('keeps the text without its context when the context was archived elsewhere', async () => {
+    const { repository, session } = setup()
+    repository.archivedContextIds.add('old')
+    session.change({ content: 'keep me', contextId: 'old' })
+
+    await expect(session.flush()).rejects.toMatchObject({ code: DomainErrorCode.ContextArchived })
+    expect(repository.drafts.get('main')).toMatchObject({ content: 'keep me', contextId: null })
+
+    await session.flush()
+    expect(repository.log.filter((line) => line.startsWith('save:start'))).toHaveLength(2)
   })
 
   test('discard cancels the pending autosave and removes the draft', async () => {

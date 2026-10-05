@@ -1,4 +1,5 @@
 import { normalizeEntryContent } from '../domain/content'
+import { DomainError, DomainErrorCode } from '../domain/errors'
 import type { CaptureSurface, Entry } from '../domain/models'
 import type { AppStateRepository } from '../repositories/contracts'
 
@@ -33,7 +34,11 @@ export type CaptureSession = {
   load(): Promise<CaptureComposerState>
   /** Record an edit; it is saved after the autosave delay. */
   change(state: CaptureComposerState): void
-  /** Save any pending edit now and wait for earlier writes, e.g. on hide/close. */
+  /**
+   * Save any pending edit now and wait for earlier writes, e.g. on hide/close.
+   * If the edit's context was archived or removed elsewhere, the text is saved
+   * without it and this still rejects, so the composer can clear its picker.
+   */
   flush(): Promise<void>
   discard(): Promise<void>
   /** Rejects invalid content without touching storage or the pending edit. */
@@ -58,6 +63,9 @@ export function createCaptureSession({
   // invocation order. It never rejects, so a failed call does not block later ones.
   let tail: Promise<unknown> = Promise.resolve()
   let pending: CaptureComposerState | null = null
+  // Bumped whenever the pending edit is replaced or deliberately cleared, so
+  // a failed write restores its edit only if nothing happened since.
+  let generation = 0
   let timerHandle: unknown = null
 
   function enqueue<T>(task: () => Promise<T>): Promise<T> {
@@ -71,21 +79,34 @@ export function createCaptureSession({
     timerHandle = null
   }
 
-  /** Put an unsaved edit back unless the user has typed something newer. */
-  function restorePending(state: CaptureComposerState) {
-    pending ??= state
+  /**
+   * Put an unsaved edit back after a failed write, unless the user typed,
+   * discarded, or submitted since it was taken.
+   */
+  function restorePending(state: CaptureComposerState, takenAt: number) {
+    if (generation === takenAt) pending = state
   }
 
   function flush(): Promise<void> {
     cancelAutosave()
     const state = pending
+    const takenAt = generation
     pending = null
     return enqueue(async () => {
       if (state === null) return
       try {
         await repository.saveDraft({ surface, ...state })
       } catch (error) {
-        restorePending(state)
+        if (state.contextId === null || !isUnselectableContext(error)) {
+          restorePending(state, takenAt)
+          throw error
+        }
+        try {
+          await repository.saveDraft({ surface, content: state.content, contextId: null })
+        } catch (fallbackError) {
+          restorePending(state, takenAt)
+          throw fallbackError
+        }
         throw error
       }
     })
@@ -102,6 +123,7 @@ export function createCaptureSession({
 
     change(state) {
       pending = state
+      generation += 1
       cancelAutosave()
       timerHandle = timer.set(() => {
         timerHandle = null
@@ -114,6 +136,7 @@ export function createCaptureSession({
     discard() {
       cancelAutosave()
       pending = null
+      generation += 1
       return enqueue(() => repository.discardDraft(surface))
     },
 
@@ -121,6 +144,7 @@ export function createCaptureSession({
       const content = normalizeEntryContent(state.content)
       cancelAutosave()
       pending = null
+      const takenAt = ++generation
       return await enqueue(async () => {
         try {
           return await repository.submitEntry({
@@ -128,10 +152,17 @@ export function createCaptureSession({
           })
         } catch (error) {
           // The edit was never saved as a draft; keep it for the next flush.
-          restorePending(state)
+          restorePending(state, takenAt)
           throw error
         }
       })
     },
   }
+}
+
+function isUnselectableContext(error: unknown): boolean {
+  return error instanceof DomainError && (
+    error.code === DomainErrorCode.ContextArchived ||
+    error.code === DomainErrorCode.ContextNotFound
+  )
 }

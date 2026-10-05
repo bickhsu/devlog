@@ -35,7 +35,7 @@ Repository 負責配置 ID 與時間；domain 日期使用 `Date`，序列化由
 - `discard()`：取消待保存的編輯並刪除 draft。
 - `submit(state)`：先以 `normalizeEntryContent` 驗證，失敗時不碰儲存也保留待保存的編輯；通過後取消待執行的 autosave、排在已開始的 save 之後提交。
 
-Session 內所有 repository 呼叫依呼叫順序執行，因此成功 submit 後不會有 late autosave 重建已清除的 draft；submit 開始後的新編輯則成為下一份 draft。Autosave 沒有呼叫端可 reject，失敗透過 `onAutosaveError` 回報，並在下一次 `flush()` 重試。
+Session 內所有 repository 呼叫依呼叫順序執行，因此成功 submit 後不會有 late autosave 重建已清除的 draft；submit 開始後的新編輯則成為下一份 draft。Autosave 沒有呼叫端可 reject，失敗透過 `onAutosaveError` 回報，並在下一次 `flush()` 重試。失敗的寫入只在之後沒有新編輯、discard 或 submit 時才放回待保存的編輯，避免已清除的 draft 被寫回。若編輯選的 context 已在別處被封存或移除，session 改以無 context 保存文字，並仍以 `ContextArchived`／`ContextNotFound` reject，讓 composer 清除 picker。
 
 ## 錯誤與執行順序
 
