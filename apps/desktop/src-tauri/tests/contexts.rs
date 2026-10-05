@@ -381,3 +381,57 @@ fn failed_create_path_rolls_back_created_ancestors() {
     ));
     assert_eq!(active_names(&database), ["Work"]);
 }
+
+#[test]
+fn malformed_ids_are_not_found() {
+    let database = TestDataDir::new().open();
+    let work = create(&database, None, "Work");
+    let uppercase = work.id.to_uppercase();
+    let simple = work.id.replace('-', "");
+    // Well-formed but unknown ids are not found either.
+    let unknown = "6f1c2b8e-3d4a-4c5b-9e7f-0a1b2c3d4e5f";
+
+    for id in [
+        "",
+        "not-a-uuid",
+        uppercase.as_str(),
+        simple.as_str(),
+        unknown,
+    ] {
+        assert_eq!(contexts::find(&database, id).unwrap(), None);
+        assert!(matches!(
+            contexts::create(&database, Some(id), "Child"),
+            Err(ContextError::NotFound)
+        ));
+        assert!(matches!(
+            contexts::rename(&database, id, "Job"),
+            Err(ContextError::NotFound)
+        ));
+        assert!(matches!(
+            contexts::archive(&database, id),
+            Err(ContextError::NotFound)
+        ));
+    }
+    assert_eq!(active_names(&database), ["Work"]);
+}
+
+#[test]
+fn ids_of_any_uuid_version_are_accepted() {
+    let data_dir = TestDataDir::new();
+    let database = data_dir.open();
+    // Version 4, as another device or sync source might generate.
+    let id = "6f1c2b8e-3d4a-4c5b-9e7f-0a1b2c3d4e5f".to_owned();
+    data_dir
+        .raw_connection()
+        .execute(
+            "INSERT INTO contexts (id, name, created_at, updated_at) VALUES (?1, 'Synced', 0, 0)",
+            [&id],
+        )
+        .unwrap();
+
+    assert_eq!(find(&database, &id).name, "Synced");
+    assert_eq!(
+        contexts::rename(&database, &id, "Imported").unwrap().name,
+        "Imported"
+    );
+}

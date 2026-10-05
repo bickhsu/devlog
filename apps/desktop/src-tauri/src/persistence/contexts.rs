@@ -225,7 +225,13 @@ fn normalize_name(name: &str) -> Result<&str, ContextError> {
     Ok(name)
 }
 
+/// Every id from the webview (find, parent, rename, archive) is looked up
+/// here. Ids are generated as canonical lowercase hyphenated UUIDs, so any
+/// other shape cannot name a context and is not found without a query.
 fn find_in(connection: &Connection, id: &str) -> rusqlite::Result<Option<ContextRecord>> {
+    if !is_canonical_uuid(id) {
+        return Ok(None);
+    }
     connection
         .query_row(
             &format!("SELECT {COLUMNS} FROM contexts WHERE id = ?1"),
@@ -233,6 +239,11 @@ fn find_in(connection: &Connection, id: &str) -> rusqlite::Result<Option<Context
             from_row,
         )
         .optional()
+}
+
+/// Any UUID version is accepted so ids from a future sync source still work.
+fn is_canonical_uuid(id: &str) -> bool {
+    Uuid::try_parse(id).is_ok_and(|uuid| uuid.hyphenated().to_string() == id)
 }
 
 fn require_active(connection: &Connection, id: &str) -> Result<ContextRecord, ContextError> {
