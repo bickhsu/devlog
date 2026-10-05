@@ -3,9 +3,11 @@
 //! temporary `Database`.
 
 use serde::{Deserialize, Serialize};
-use tauri::State;
+use tauri::{AppHandle, Runtime, State};
 
 use super::error::{CommandError, ErrorCode};
+use crate::events::{self, Invalidation};
+use crate::persistence::capture::CaptureSurface;
 use crate::persistence::contexts::{self, ContextError, ContextRecord};
 use crate::persistence::Database;
 
@@ -114,30 +116,68 @@ pub fn list_contexts(
 }
 
 #[tauri::command]
-pub fn create_context(
+pub fn create_context<R: Runtime>(
+    app: AppHandle<R>,
     database: State<'_, Database>,
     input: CreateContextInput,
 ) -> Result<ContextDto, CommandError> {
-    create(&database, input)
+    let context = create(&database, input)?;
+    emit_contexts_changed(&app, &context.id);
+    Ok(context)
 }
 
 #[tauri::command]
-pub fn create_context_path(
+pub fn create_context_path<R: Runtime>(
+    app: AppHandle<R>,
     database: State<'_, Database>,
     input: CreateContextPathInput,
 ) -> Result<ContextDto, CommandError> {
-    create_path(&database, input)
+    let context = create_path(&database, input)?;
+    emit_contexts_changed(&app, &context.id);
+    Ok(context)
 }
 
 #[tauri::command]
-pub fn rename_context(
+pub fn rename_context<R: Runtime>(
+    app: AppHandle<R>,
     database: State<'_, Database>,
     input: RenameContextInput,
 ) -> Result<ContextDto, CommandError> {
-    rename(&database, input)
+    let context = rename(&database, input)?;
+    emit_contexts_changed(&app, &context.id);
+    Ok(context)
 }
 
+/// Archiving may also clear the current context and either draft's context,
+/// so those are invalidated too.
 #[tauri::command]
-pub fn archive_context(database: State<'_, Database>, id: String) -> Result<(), CommandError> {
-    archive(&database, &id)
+pub fn archive_context<R: Runtime>(
+    app: AppHandle<R>,
+    database: State<'_, Database>,
+    id: String,
+) -> Result<(), CommandError> {
+    archive(&database, &id)?;
+    events::emit(
+        &app,
+        &[
+            Invalidation::Contexts { context_id: id },
+            Invalidation::AppState,
+            Invalidation::CaptureDraft {
+                surface: CaptureSurface::Main,
+            },
+            Invalidation::CaptureDraft {
+                surface: CaptureSurface::QuickCapture,
+            },
+        ],
+    );
+    Ok(())
+}
+
+fn emit_contexts_changed<R: Runtime>(app: &AppHandle<R>, context_id: &str) {
+    events::emit(
+        app,
+        &[Invalidation::Contexts {
+            context_id: context_id.to_owned(),
+        }],
+    );
 }
