@@ -8,6 +8,18 @@ export type {
 export { DomainError, DomainErrorCode } from './domain/errors'
 export { normalizeEntryContent } from './domain/content'
 export { normalizeContextName } from './domain/context-name'
+export {
+  createCaptureSession,
+  DEFAULT_AUTOSAVE_DELAY_MS,
+} from './capture/capture-session'
+export type {
+  AutosaveTimer,
+  CaptureComposerState,
+  CaptureSession,
+  CaptureSessionOptions,
+} from './capture/capture-session'
+export { createKeyedSerialQueue } from './capture/serial-queue'
+export type { KeyedSerialQueue } from './capture/serial-queue'
 export type {
   AppStateRepository,
   ContextQuery,
