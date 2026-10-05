@@ -8,13 +8,16 @@ import type {
   RenameContextInput,
 } from '../repositories/contracts'
 
-/** Names cannot contain '/', so this separator keeps paths unambiguous. */
-export const CONTEXT_PATH_SEPARATOR = ' / '
+/** Names cannot contain '/', so paths like `/Work/DevLog` are unambiguous. */
+export const CONTEXT_PATH_SEPARATOR = '/'
 
-export type ContextTreeNode = {
+export type ContextPathOption = {
   readonly context: Context
   /** Ancestors first, ending with this context. */
   readonly path: readonly Context[]
+}
+
+export type ContextTreeNode = ContextPathOption & {
   readonly children: readonly ContextTreeNode[]
 }
 
@@ -49,6 +52,21 @@ export async function listActiveContextTree(
   contexts: ContextRepository,
 ): Promise<ContextTreeNode[]> {
   return buildContextTree(await contexts.list())
+}
+
+/** Active contexts flattened in tree order, for path pickers and completion. */
+export async function listActiveContextPaths(
+  contexts: ContextRepository,
+): Promise<ContextPathOption[]> {
+  const options: ContextPathOption[] = []
+  const visit = (nodes: readonly ContextTreeNode[]) => {
+    for (const { context, path, children } of nodes) {
+      options.push({ context, path })
+      visit(children)
+    }
+  }
+  visit(await listActiveContextTree(contexts))
+  return options
 }
 
 /** Resolves archived contexts too, so historical entries keep their path. */
@@ -119,8 +137,24 @@ export function resolveContextPath(contexts: readonly Context[], id: string): Co
   return path
 }
 
+/** `/Work/DevLog`; an empty path (no context) is `/`. */
 export function formatContextPath(path: readonly Context[]): string {
-  return path.map((context) => context.name).join(CONTEXT_PATH_SEPARATOR)
+  return CONTEXT_PATH_SEPARATOR +
+    path.map((context) => context.name).join(CONTEXT_PATH_SEPARATOR)
+}
+
+/**
+ * Parses a typed path into normalized segment names. It must start with `/`;
+ * one trailing `/` is allowed, and `/` alone is no context. Every segment
+ * follows the context name rules.
+ */
+export function parseContextPath(path: string): string[] {
+  if (!path.startsWith(CONTEXT_PATH_SEPARATOR)) {
+    throw new DomainError(DomainErrorCode.ContextNameInvalid)
+  }
+  if (path === CONTEXT_PATH_SEPARATOR) return []
+  const body = path.endsWith(CONTEXT_PATH_SEPARATOR) ? path.slice(1, -1) : path.slice(1)
+  return body.split(CONTEXT_PATH_SEPARATOR).map(normalizeContextName)
 }
 
 function compareByName(a: Context, b: Context): number {

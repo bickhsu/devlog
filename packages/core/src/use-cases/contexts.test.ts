@@ -8,8 +8,10 @@ import {
   DomainErrorCode,
   findContextPath,
   formatContextPath,
+  listActiveContextPaths,
   listActiveContextTree,
   listContextHistory,
+  parseContextPath,
   renameContext,
   type Context,
   type ContextQuery,
@@ -207,7 +209,7 @@ describe('active context tree', () => {
       ['work', ['api', ['DevLog', ['Core']]]],
     ])
     const core = tree[1].children[1].children[0]
-    expect(formatContextPath(core.path)).toBe('work / DevLog / Core')
+    expect(formatContextPath(core.path)).toBe('/work/DevLog/Core')
   })
 
   test('excludes archived subtrees from the picker', async () => {
@@ -239,7 +241,7 @@ describe('context path and history', () => {
     await archiveContext(repository, work.id)
 
     expect(formatContextPath(await findContextPath(repository, devlog.id)))
-      .toBe('Work / DevLog')
+      .toBe('/Work/DevLog')
     await expect(findContextPath(repository, 'missing'))
       .rejects.toBeInstanceOf(DomainError)
   })
@@ -264,5 +266,40 @@ describe('context path and history', () => {
       .toEqual(['core-late'])
     await expect(listContextHistory({ contexts, entries }, 'missing'))
       .rejects.toMatchObject({ code: DomainErrorCode.ContextNotFound })
+  })
+})
+
+describe('typed context paths', () => {
+  test('format as /A/B, with / meaning no context', () => {
+    expect(formatContextPath([])).toBe('/')
+  })
+
+  test.each([
+    ['/', []],
+    ['/Work', ['Work']],
+    ['/Work/DevLog/', ['Work', 'DevLog']],
+    ['/ Work / 開發日誌 ', ['Work', '開發日誌']],
+  ])('parse %p', (path, names) => {
+    expect(parseContextPath(path)).toEqual(names)
+  })
+
+  test.each(['', 'Work', '//', '/Work//DevLog', '/Work/ /DevLog', '/Work//'])(
+    'reject malformed path %p', (path) => {
+      expect(() => parseContextPath(path)).toThrow(DomainError)
+    })
+
+  test('list active paths flattened in tree order', async () => {
+    const repository = new InMemoryContextRepository()
+    const work = await createContext(repository, { parentId: null, name: 'Work' })
+    const devlog = await createContext(repository, { parentId: work.id, name: 'DevLog' })
+    await createContext(repository, { parentId: devlog.id, name: 'Core' })
+    await createContext(repository, { parentId: null, name: 'Home' })
+    await createContext(repository, { parentId: work.id, name: 'API' })
+    const old = await createContext(repository, { parentId: work.id, name: 'Old' })
+    await archiveContext(repository, old.id)
+
+    expect((await listActiveContextPaths(repository))
+      .map((option) => formatContextPath(option.path)))
+      .toEqual(['/Home', '/Work', '/Work/API', '/Work/DevLog', '/Work/DevLog/Core'])
   })
 })

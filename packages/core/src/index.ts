@@ -28,9 +28,11 @@ export {
   createContext,
   findContextPath,
   formatContextPath,
+  listActiveContextPaths,
   listActiveContextTree,
   listContextHistory,
+  parseContextPath,
   renameContext,
   resolveContextPath,
 } from './use-cases/contexts'
-export type { ContextTreeNode } from './use-cases/contexts'
+export type { ContextPathOption, ContextTreeNode } from './use-cases/contexts'
