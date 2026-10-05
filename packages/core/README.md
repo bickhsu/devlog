@@ -25,6 +25,14 @@ Repository 負責配置 ID 與時間；domain 日期使用 `Date`，序列化由
 - `findContextPath` 包含 archived contexts，讓歷史 entry 仍能顯示 `/Work/DevLog` 這類 path。`formatContextPath` 輸出 `/A/B`，沒有 context 時為 `/`；名稱禁止 `/` 所以不會混淆。
 - `listContextHistory` 查詢 context 與所有 descendants（含 archived）的 entries，依 `(createdAt, id)` 遞增排序。
 
+## Entry Use Cases
+
+`src/use-cases/entries.ts` 提供 timeline 回顧與 entry 編輯：
+
+- `updateEntry` 先以 `normalizeEntryContent` 拒絕空白內容，再交給 repository；`id`、`createdAt` 與 timeline 位置不變。沿用原本的 archived context 可以，改成另一個 archived context 由 repository 拒絕。
+- `localDayRange` 回傳 `[本地 00:00, 隔天本地 00:00)`，`listEntriesOnDay` 以它查詢某一天。`addLocalDays` 以日曆日而不是 24 小時移動，所以 DST 當天（23 或 25 小時）不會跑到錯的日期。
+- `formatLocalDate`／`parseLocalDate` 處理本地 `YYYY-MM-DD`；`groupEntriesByLocalDay` 依本地日期分組，日期與組內 entries 都依 `(createdAt, id)` 排序。
+
 ## Capture Use Case
 
 `src/use-cases/capture.ts` 的 `createCaptureSession({ repository, surface })` 是一個 composer 的草稿生命週期，main 與 quick-capture 各建一個。它不像 context use cases 是單次呼叫的函式，而是持有待保存編輯與 autosave timer 的 session，因為 submit 必須能取消尚未執行的 autosave：
