@@ -229,7 +229,7 @@ fn normalize_name(name: &str) -> Result<&str, ContextError> {
 /// `White_Space` differs by two characters: it also includes U+0085 (NEL)
 /// and lacks U+FEFF (BOM), so `str::trim` alone would accept or store names
 /// that Core rejects or keeps.
-fn is_js_whitespace(c: char) -> bool {
+pub(super) fn is_js_whitespace(c: char) -> bool {
     c == '\u{FEFF}' || (c.is_whitespace() && c != '\u{85}')
 }
 
@@ -254,7 +254,10 @@ fn is_canonical_uuid(id: &str) -> bool {
     Uuid::try_parse(id).is_ok_and(|uuid| uuid.hyphenated().to_string() == id)
 }
 
-fn require_active(connection: &Connection, id: &str) -> Result<ContextRecord, ContextError> {
+pub(super) fn require_active(
+    connection: &Connection,
+    id: &str,
+) -> Result<ContextRecord, ContextError> {
     let context = find_in(connection, id)?
         .filter(|context| !context.is_deleted())
         .ok_or(ContextError::NotFound)?;

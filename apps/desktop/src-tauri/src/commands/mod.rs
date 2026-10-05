@@ -1,15 +1,11 @@
 //! Tauri command boundary. Every command returns `Result<Dto, CommandError>`
 //! so the webview only ever receives camelCase DTOs or a typed error code.
 
-mod capture;
+pub mod capture;
 pub mod contexts;
 mod error;
 mod status;
 
-pub use capture::{
-    capture_draft, default_context_id, discard_draft, save_draft, submit_entry, CaptureDraftDto,
-    CaptureInput, EntryDto,
-};
 pub use error::{CommandError, ErrorCode};
 pub use status::{database_status, DatabaseStatusDto};
 
