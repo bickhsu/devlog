@@ -3,6 +3,8 @@
 // Each test crate compiles this module separately and uses a different subset.
 #![allow(dead_code)]
 
+pub mod ipc;
+
 use std::path::{Path, PathBuf};
 
 use devlog_desktop_lib::persistence::{Database, DATABASE_FILE_NAME};

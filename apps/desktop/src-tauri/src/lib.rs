@@ -1,4 +1,5 @@
 pub mod commands;
+pub mod events;
 pub mod persistence;
 
 use tauri::{App, Manager, WebviewWindowBuilder};

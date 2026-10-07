@@ -33,6 +33,19 @@ export type {
   CaptureSessionOptions,
 } from './use-cases/capture'
 export {
+  addLocalDays,
+  compareEntries,
+  formatLocalDate,
+  groupEntriesByLocalDay,
+  isSameLocalDay,
+  listEntriesOnDay,
+  localDayRange,
+  parseLocalDate,
+  startOfLocalDay,
+  updateEntry,
+} from './use-cases/entries'
+export type { LocalDayGroup } from './use-cases/entries'
+export {
   archiveContext,
   buildContextTree,
   CONTEXT_PATH_SEPARATOR,

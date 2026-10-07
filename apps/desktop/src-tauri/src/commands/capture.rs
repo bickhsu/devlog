@@ -3,9 +3,10 @@
 //! temporary `Database`.
 
 use serde::{Deserialize, Serialize};
-use tauri::State;
+use tauri::{AppHandle, Runtime, State};
 
 use super::error::{CommandError, ErrorCode};
+use crate::events::{self, Invalidation};
 use crate::persistence::capture::{
     self, CaptureDraftRecord, CaptureError, CaptureSurface, EntryRecord,
 };
@@ -140,25 +141,47 @@ pub fn get_capture_draft(
 }
 
 #[tauri::command]
-pub fn save_capture_draft(
+pub fn save_capture_draft<R: Runtime>(
+    app: AppHandle<R>,
     database: State<'_, Database>,
     input: CaptureInput,
 ) -> Result<CaptureDraftDto, CommandError> {
-    save_draft(&database, input)
+    let surface = input.surface;
+    let draft = save_draft(&database, input)?;
+    events::emit(&app, &[Invalidation::CaptureDraft { surface }]);
+    Ok(draft)
 }
 
 #[tauri::command]
-pub fn discard_capture_draft(
+pub fn discard_capture_draft<R: Runtime>(
+    app: AppHandle<R>,
     database: State<'_, Database>,
     surface: CaptureSurface,
 ) -> Result<(), CommandError> {
-    discard_draft(&database, surface)
+    discard_draft(&database, surface)?;
+    events::emit(&app, &[Invalidation::CaptureDraft { surface }]);
+    Ok(())
 }
 
+/// One submit changes all three: the new entry, the cleared source draft,
+/// and the default context.
 #[tauri::command]
-pub fn submit_capture_entry(
+pub fn submit_capture_entry<R: Runtime>(
+    app: AppHandle<R>,
     database: State<'_, Database>,
     input: CaptureInput,
 ) -> Result<EntryDto, CommandError> {
-    submit_entry(&database, input)
+    let surface = input.surface;
+    let entry = submit_entry(&database, input)?;
+    events::emit(
+        &app,
+        &[
+            Invalidation::Entries {
+                entry_id: entry.id.clone(),
+            },
+            Invalidation::CaptureDraft { surface },
+            Invalidation::AppState,
+        ],
+    );
+    Ok(entry)
 }

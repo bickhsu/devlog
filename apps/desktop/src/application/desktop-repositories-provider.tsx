@@ -6,11 +6,14 @@ import type {
   EntryRepository,
 } from "@devlog/core"
 
-/** Repositories available to desktop features. */
+import type { InvalidationEvents } from "@/application/invalidation-events"
+
+/** Repositories, plus the signal to reload them, available to desktop features. */
 export type DesktopRepositories = {
   readonly appState: AppStateRepository
   readonly contexts: ContextRepository
   readonly entries: EntryRepository
+  readonly invalidation: InvalidationEvents
 }
 
 // This Context belongs with the dependency type and its composition provider.
