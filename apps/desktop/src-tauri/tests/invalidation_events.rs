@@ -130,6 +130,47 @@ fn failed_mutations_and_reads_emit_nothing() {
         )
         .unwrap_err();
     assert_eq!(error, json!({ "code": "EMPTY_ENTRY_CONTENT" }));
+    harness.take();
+
+    let work = harness
+        .invoke(
+            "create_context",
+            json!({ "input": { "parentId": null, "name": "Work" } }),
+        )
+        .unwrap();
+    harness
+        .invoke(
+            "create_context",
+            json!({ "input": { "parentId": null, "name": "Personal" } }),
+        )
+        .unwrap();
+    harness.take();
+    let missing = "0190f5c4-0000-7000-8000-000000000000";
+    assert_eq!(
+        harness.invoke(
+            "create_context",
+            json!({ "input": { "parentId": null, "name": "  " } }),
+        ),
+        Err(json!({ "code": "CONTEXT_NAME_INVALID" }))
+    );
+    assert_eq!(
+        harness.invoke(
+            "rename_context",
+            json!({ "input": { "id": work["id"], "name": "Personal" } }),
+        ),
+        Err(json!({ "code": "CONTEXT_NAME_CONFLICT" }))
+    );
+    assert_eq!(
+        harness.invoke("archive_context", json!({ "id": missing })),
+        Err(json!({ "code": "CONTEXT_NOT_FOUND" }))
+    );
+    assert_eq!(
+        harness.invoke(
+            "save_capture_draft",
+            json!({ "input": { "surface": "main", "content": "x", "contextId": missing } }),
+        ),
+        Err(json!({ "code": "CONTEXT_NOT_FOUND" }))
+    );
     harness
         .invoke("list_contexts", json!({ "includeArchived": true }))
         .unwrap();

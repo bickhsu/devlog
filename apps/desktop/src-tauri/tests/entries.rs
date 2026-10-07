@@ -101,12 +101,18 @@ fn update_keeps_an_archived_context_but_refuses_to_select_one() {
 #[test]
 fn failed_updates_leave_the_entry_unchanged() {
     let database = TestDataDir::new().open();
+    let archived = create_context(&database, None, "Archived");
+    contexts::archive(&database, &archived).unwrap();
     let entry = submit(&database, "keep me", None);
 
     let empty = entries::update(&database, &entry.id, " \n\t ", None).unwrap_err();
     assert!(matches!(empty, EntryError::EmptyContent));
     let missing_context = entries::update(&database, &entry.id, "x", Some(MISSING_ID)).unwrap_err();
     assert!(matches!(missing_context, EntryError::ContextNotFound));
+    // The content is valid here, so only the context check stops the write.
+    let archived_context =
+        entries::update(&database, &entry.id, "new content", Some(&archived)).unwrap_err();
+    assert!(matches!(archived_context, EntryError::ContextArchived));
 
     assert_eq!(entries::find(&database, &entry.id).unwrap(), Some(entry));
 }

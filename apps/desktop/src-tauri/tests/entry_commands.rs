@@ -62,6 +62,10 @@ fn update_entry_returns_the_edited_dto_and_invalidates_entries() {
 #[test]
 fn update_entry_errors_are_typed_codes() {
     let harness = Harness::new();
+    let archived = contexts::create(&harness.database(), None, "Archived")
+        .unwrap()
+        .id;
+    contexts::archive(&harness.database(), &archived).unwrap();
     let entry = submit(&harness, "keep", Value::Null);
     harness.take();
     let update = |id: &Value, content: &str, context_id: Value| {
@@ -91,7 +95,15 @@ fn update_entry_errors_are_typed_codes() {
         ),
         Err(json!({ "code": "CONTEXT_NOT_FOUND" }))
     );
+    assert_eq!(
+        update(&entry["id"], "x", json!(archived)),
+        Err(json!({ "code": "CONTEXT_ARCHIVED" }))
+    );
     assert_eq!(harness.take(), vec![]);
+    assert_eq!(
+        harness.invoke("get_entry", json!({ "id": entry["id"] })),
+        Ok(entry)
+    );
 }
 
 #[test]
