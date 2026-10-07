@@ -112,6 +112,20 @@ describe('local day ranges', () => {
     expect(addLocalDays(range.from, 1).getTime()).toBe(range.to.getTime())
   })
 
+  test('start at the first real instant when the transition skips local midnight', () => {
+    // Chile springs forward at 00:00, so 2026-09-06 begins at 01:00.
+    process.env.TZ = 'America/Santiago'
+
+    const range = localDayRange(new Date(2026, 8, 6, 12))
+
+    expect(range.from.toISOString()).toBe('2026-09-06T04:00:00.000Z')
+    expect(range.to.toISOString()).toBe('2026-09-07T03:00:00.000Z')
+    expect(range.to.getTime() - range.from.getTime()).toBe(23 * 60 * 60 * 1000)
+    expect(formatLocalDate(range.from)).toBe('2026-09-06')
+    expect(parseLocalDate('2026-09-06')?.getTime()).toBe(range.from.getTime())
+    expect(localDayRange(addLocalDays(range.from, -1)).to.getTime()).toBe(range.from.getTime())
+  })
+
   test('step by calendar days across month and year boundaries', () => {
     process.env.TZ = 'Asia/Taipei'
 
